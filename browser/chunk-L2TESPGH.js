@@ -1,0 +1,1 @@
+var i={production:!1,apiUrl:"",googleMapsApiKey:"AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg",services:{userManagement:"/api/v1",auth:"/api/v1/auth",productionApiUrl:"/api/v1/production",inventory:"/api/inventory",communication:"/api/communications",plantMonitoring:"/api/v1",notification:"/api/notifications",microcredit:"/api/microcredit"}};export{i as a};
