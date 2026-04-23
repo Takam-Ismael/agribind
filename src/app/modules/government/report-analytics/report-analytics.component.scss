@@ -1,0 +1,1008 @@
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$navy:       #1e3a5f;
+$white:      #ffffff;
+$gray-50:    #f9fafb;
+$gray-100:   #f3f4f6;
+$gray-200:   #e5e7eb;
+$gray-300:   #d1d5db; 
+$gray-400:   #9ca3af;
+$gray-500:   #6b7280;
+$gray-600:   #4b5563;
+$gray-700:   #374151;
+$gray-900:   #111827;
+
+$blue-50:    #eff6ff;
+$blue-200:   #bfdbfe;
+$blue-600:   #2563eb;
+$blue-700:   #1d4ed8;
+
+$green-50:   #f0fdf4;
+$green-200:  #bbf7d0;
+$green-600:  #16a34a;
+$green-700:  #15803d;
+$green-800:  #166534;
+
+$amber-50:   #fffbeb;
+$amber-200:  #fde68a;
+$amber-600:  #d97706;
+$amber-700:  #b45309;
+$amber-800:  #92400e;
+
+$red-50:     #fff5f5;
+$red-200:    #fecaca;
+$red-600:    #dc2626;
+$red-700:    #b91c1c;
+$red-800:    #991b1b;
+
+$indigo-600: #4f46e5;
+
+$radius:    12px;
+$radius-sm: 8px;
+$shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+$shadow-md: 0 4px 12px rgba(0,0,0,.09), 0 2px 4px rgba(0,0,0,.06);
+
+// ── Keyframes ─────────────────────────────────────────────────────────────────
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes metricPop {
+  from { opacity: 0; transform: scale(.9) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes tplSlide {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes insightSlide {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Container ─────────────────────────────────────────────────────────────────
+.ra-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background: $gray-50;
+  min-height: 100%;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: $gray-900;
+
+  &.animated-in {
+    .stagger-1 { animation: slideUp .48s ease both 0ms; }
+    .stagger-2 { animation: slideUp .48s ease both 60ms; }
+    .stagger-3 { animation: slideUp .48s ease both 120ms; }
+    .stagger-4 { animation: slideUp .48s ease both 180ms; }
+    .stagger-5 { animation: slideUp .48s ease both 220ms; }
+    .stagger-6 { animation: slideUp .48s ease both 280ms; }
+    .stagger-7 { animation: slideUp .48s ease both 340ms; }
+
+    .metric-card  { animation: metricPop .42s ease both; }
+    .template-card { animation: tplSlide .38s ease both; }
+    .insight-item  { animation: insightSlide .38s ease both; }
+  }
+}
+
+// ── Base card ─────────────────────────────────────────────────────────────────
+.ra-card {
+  background: $white;
+  border-radius: $radius;
+  box-shadow: $shadow;
+  border: 1px solid $gray-200;
+  overflow: hidden;
+  transition: box-shadow .2s;
+  &:hover { box-shadow: $shadow-md; }
+}
+
+// ── Card header ───────────────────────────────────────────────────────────────
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid $gray-100;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $gray-900;
+  margin: 0;
+}
+
+.ch-icon {
+  display: flex;
+  align-items: center;
+  &.green-icon  { color: $green-600; }
+  &.blue-icon   { color: $blue-600; }
+  &.amber-icon  { color: $amber-600; }
+  &.gray-icon   { color: $gray-500; }
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: $gray-600;
+}
+
+.leg-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+// ── Controls card ─────────────────────────────────────────────────────────────
+.controls-card { overflow: visible; }
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+}
+
+.controls-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ctrl-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ra-select {
+  height: 38px;
+  padding: 0 36px 0 12px;
+  border: 1px solid $gray-200;
+  border-radius: $radius-sm;
+  font-size: 13.5px;
+  color: $gray-700;
+  background: $white;
+  appearance: none;
+  cursor: pointer;
+  min-width: 180px;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus {
+    outline: none;
+    border-color: $blue-600;
+    box-shadow: 0 0 0 3px rgba($blue-600, .12);
+  }
+}
+
+.select-chevron {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  color: $gray-500;
+  display: flex;
+  align-items: center;
+}
+
+// ── Date picker button ────────────────────────────────────────────────────────
+.date-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid $gray-200;
+  border-radius: $radius-sm;
+  font-size: 13.5px;
+  color: $gray-700;
+  background: $white;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:hover {
+    border-color: $blue-600;
+    box-shadow: 0 0 0 3px rgba($blue-600, .1);
+  }
+}
+
+// ── Calendar dropdown ─────────────────────────────────────────────────────────
+.calendar-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1000;
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: $radius;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+  padding: 16px;
+  width: 300px;
+  animation: slideUp .15s ease both;
+}
+
+.cal-mode-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: $blue-600;
+  text-align: center;
+  margin-bottom: 10px;
+  background: $blue-50;
+  border-radius: 6px;
+  padding: 4px 0;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cal-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid $gray-200;
+  border-radius: 6px;
+  background: $white;
+  cursor: pointer;
+  color: $gray-500;
+  transition: background .12s, color .12s;
+
+  &:hover { background: $gray-100; color: $navy; }
+}
+
+.cal-month-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: $gray-900;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+
+  &.cal-headers { margin-bottom: 4px; }
+}
+
+.cal-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: $gray-400;
+  padding: 4px 0;
+}
+
+.cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  color: $gray-700;
+  background: transparent;
+  cursor: pointer;
+  transition: background .1s, color .1s;
+
+  &:hover:not(:disabled):not(.cal-start):not(.cal-end) {
+    background: $blue-50;
+    color: $blue-600;
+  }
+
+  &.cal-empty { pointer-events: none; }
+
+  &.cal-start {
+    background: $navy;
+    color: $white;
+    border-radius: 6px 0 0 6px;
+  }
+
+  &.cal-end {
+    background: $navy;
+    color: $white;
+    border-radius: 0 6px 6px 0;
+  }
+
+  &.cal-in-range {
+    background: $blue-200;
+    color: $blue-700;
+    border-radius: 0;
+  }
+
+  &.cal-today:not(.cal-start):not(.cal-end) {
+    border: 1.5px solid $blue-600;
+    color: $blue-600;
+    font-weight: 600;
+  }
+
+  &:disabled { opacity: 0; pointer-events: none; }
+}
+
+.cal-range-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid $gray-100;
+  font-size: 12px;
+  color: $gray-700;
+}
+
+.cal-range-from,
+.cal-range-to {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.cal-range-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.cal-dot-start { background: $navy; }
+  &.cal-dot-end   { background: $blue-600; }
+}
+
+// ── Export button & menu ──────────────────────────────────────────────────────
+.export-wrap { position: relative; }
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  background: $blue-600;
+  color: $white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+  white-space: nowrap;
+
+  &:hover:not(.loading) { background: $blue-700; transform: translateY(-1px); }
+  &:active              { transform: translateY(0); }
+  &.loading             { opacity: .8; cursor: not-allowed; }
+}
+
+.export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 1000;
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+  overflow: hidden;
+  min-width: 180px;
+  animation: slideUp .13s ease both;
+}
+
+.export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: $gray-700;
+  cursor: pointer;
+  text-align: left;
+  transition: background .12s;
+
+  &:hover { background: $gray-50; }
+  &:not(:last-child) { border-bottom: 1px solid $gray-100; }
+}
+
+// ── Metrics grid ──────────────────────────────────────────────────────────────
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+
+  @media (max-width: 960px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 500px) { grid-template-columns: 1fr; }
+}
+
+.metric-card {
+  background: $white;
+  border-radius: $radius;
+  padding: 20px;
+  box-shadow: $shadow;
+  border: 1px solid $gray-200;
+  border-top-width: 3px;
+  transition: box-shadow .15s, transform .15s;
+
+  &:hover { box-shadow: $shadow-md; transform: translateY(-2px); }
+
+  &.metric-blue   { border-top-color: $blue-600; }
+  &.metric-green  { border-top-color: $green-600; }
+  &.metric-amber  { border-top-color: $amber-600; }
+  &.metric-indigo { border-top-color: $indigo-600; }
+}
+
+.metric-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.metric-title {
+  font-size: 13px;
+  color: $gray-500;
+  font-weight: 500;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.metric-icon {
+  display: flex;
+  align-items: center;
+
+  .metric-blue   & { color: $blue-600; }
+  .metric-green  & { color: $green-600; }
+  .metric-amber  & { color: $amber-600; }
+  .metric-indigo & { color: $indigo-600; }
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: $gray-900;
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+
+.metric-change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.change-up   { color: $green-600; }
+  &.change-down { color: $red-600; }
+}
+
+// ── Chart wrapper ─────────────────────────────────────────────────────────────
+.chart-wrap {
+  position: relative;
+  padding: 8px 12px 8px 8px;
+  overflow: hidden;
+}
+
+.chart-svg {
+  width: 100%;
+  display: block;
+}
+
+.area-wrap       .chart-svg { height: 300px; }
+.training-wrap   .chart-svg { height: 300px; }
+.compliance-wrap .chart-svg { height: 300px; }
+
+// ── Tooltips ──────────────────────────────────────────────────────────────────
+.chart-tooltip {
+  position: absolute;
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: $radius-sm;
+  padding: 10px 14px;
+  box-shadow: $shadow-md;
+  pointer-events: none;
+  z-index: 20;
+  min-width: 160px;
+  font-size: 13px;
+  animation: slideUp .12s ease both;
+}
+
+.tt-label {
+  font-weight: 700;
+  color: $gray-900;
+  font-size: 13px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid $gray-100;
+  padding-bottom: 4px;
+}
+
+.tt-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: $gray-700;
+}
+
+.tt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tt-val { margin-left: auto; font-weight: 600; color: $gray-900; }
+
+// ── Two-column chart row ──────────────────────────────────────────────────────
+.two-col-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+// ── Report templates ──────────────────────────────────────────────────────────
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px 20px 20px;
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 540px) { grid-template-columns: 1fr; }
+}
+
+.template-card {
+  border: 1px solid $gray-200;
+  border-radius: $radius-sm;
+  padding: 16px;
+  transition: box-shadow .15s, transform .12s;
+  background: $white;
+
+  &:hover { box-shadow: $shadow-md; transform: translateY(-2px); }
+}
+
+.tpl-top { margin-bottom: 12px; }
+
+.tpl-icon-freq {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tpl-icon { display: flex; align-items: center; }
+
+.freq-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 20px;
+  border: 1px solid $gray-200;
+  color: $gray-600;
+  background: $gray-50;
+}
+
+.tpl-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $gray-900;
+  margin: 0 0 4px;
+}
+
+.tpl-desc {
+  font-size: 12.5px;
+  color: $gray-600;
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.tpl-last {
+  font-size: 11px;
+  color: $gray-400;
+  margin: 0 0 12px;
+}
+
+// ── Template format buttons ───────────────────────────────────────────────────
+.tpl-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tpl-format-btn {
+  flex: 1;
+  height: 34px;
+  border-radius: $radius-sm;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+  border: 1.5px solid;
+
+  &:disabled { opacity: .6; cursor: not-allowed; }
+  &:not(:disabled):hover { transform: translateY(-1px); }
+}
+
+.tpl-pdf-btn {
+  background: $red-50;
+  border-color: $red-200;
+  color: $red-600;
+
+  &:not(:disabled):hover {
+    background: $red-600;
+    border-color: $red-600;
+    color: $white;
+  }
+}
+
+.tpl-excel-btn {
+  background: $green-50;
+  border-color: $green-200;
+  color: $green-600;
+
+  &:not(:disabled):hover {
+    background: $green-600;
+    border-color: $green-600;
+    color: $white;
+  }
+}
+
+// ── Spin ──────────────────────────────────────────────────────────────────────
+.spin { animation: spin .8s linear infinite; }
+.spinner-wrap { display: flex; align-items: center; gap: 5px; }
+
+// ── Insights ──────────────────────────────────────────────────────────────────
+.insights-list {
+  padding: 12px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.insight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-radius: $radius-sm;
+  border: 1px solid transparent;
+
+  &.insight-green { background: $green-50;  border-color: $green-200; }
+  &.insight-blue  { background: $blue-50;   border-color: $blue-200; }
+  &.insight-amber { background: $amber-50;  border-color: $amber-200; }
+  &.insight-red   { background: $red-50;    border-color: $red-200; }
+}
+
+.insight-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+
+  &.ig-green { background: #22C55E; }
+  &.ig-blue  { background: #3B82F6; }
+  &.ig-amber { background: #F59E0B; }
+  &.ig-red   { background: $red-600; }
+}
+
+.insight-body { flex: 1; min-width: 0; }
+
+.insight-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px;
+
+  &.ig-green-text { color: $green-800; }
+  &.ig-blue-text  { color: #1e40af; }
+  &.ig-amber-text { color: $amber-800; }
+  &.ig-red-text   { color: $red-800; }
+}
+
+.insight-desc {
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+
+  .insight-green & { color: $green-700; }
+  .insight-blue  & { color: $blue-700; }
+  .insight-amber & { color: $amber-700; }
+  .insight-red   & { color: #b91c1c; }
+}
+
+// ── Add these styles at the end of your SCSS file ─────────────────────────────
+
+// Fix for controls card to ensure dropdowns appear above everything
+.controls-card {
+  overflow: visible !important;
+  position: relative;
+  z-index: 100;
+}
+
+// Ensure date picker wrap doesn't clip content
+.date-picker-wrap {
+  position: relative;
+  overflow: visible !important;
+}
+
+// Calendar dropdown - ensure it appears above all cards
+.calendar-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 9999 !important; /* Force highest z-index */
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: $radius;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15), 0 5px 15px rgba(0,0,0,.1);
+  padding: 16px;
+  width: 300px;
+  animation: slideUp .15s ease both;
+  
+  /* Ensure it's visible and not clipped */
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+}
+
+// Export menu - ensure it appears above all cards
+.export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 9999 !important; /* Force highest z-index */
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15), 0 5px 15px rgba(0,0,0,.1);
+  overflow: hidden;
+  min-width: 180px;
+  animation: slideUp .13s ease both;
+  
+  /* Ensure it's visible and not clipped */
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+}
+
+// Fix for any card that might be clipping the dropdown
+.ra-card {
+  overflow: visible; /* Change from hidden to visible for cards that contain dropdowns */
+  
+  /* Only keep overflow hidden for cards that don't need dropdowns */
+  &:not(.controls-card) {
+    overflow: hidden;
+  }
+}
+
+// Ensure all dropdown containers don't clip content
+.controls-row,
+.controls-left,
+.ctrl-group,
+.export-wrap {
+  overflow: visible !important;
+  position: relative;
+}
+
+// Optional: Add a backdrop effect to make dropdowns stand out
+.calendar-dropdown,
+.export-menu {
+  backdrop-filter: blur(0);
+  transform-origin: top;
+  
+  /* Add a subtle shadow and border to make it pop */
+  border: 1px solid $gray-300;
+  box-shadow: 0 20px 40px rgba(0,0,0,.2), 0 5px 12px rgba(0,0,0,.1);
+}
+// ── Farmers Production Report Styles ──────────────────────────────────────────
+.farmers-report-preview {
+  padding: 20px;
+}
+
+.preview-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid $gray-200;
+}
+
+.preview-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: $gray-900;
+  margin-bottom: 12px;
+}
+
+.preview-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-badge {
+  background: $gray-100;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: $gray-700;
+  border: 1px solid $gray-200;
+}
+
+.preview-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.farmers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  
+  th, td {
+    padding: 12px 12px;
+    text-align: left;
+    border-bottom: 1px solid $gray-200;
+  }
+  
+  th {
+    background: $gray-50;
+    font-weight: 600;
+    color: $gray-700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  td {
+    color: $gray-600;
+  }
+  
+  tr:hover td {
+    background: $gray-50;
+  }
+}
+
+.quality-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  
+  &.quality-a {
+    background: $green-50;
+    color: $green-700;
+    border: 1px solid $green-200;
+  }
+  
+  &.quality-b {
+    background: $blue-50;
+    color: $blue-700;
+    border: 1px solid $blue-200;
+  }
+  
+  &.quality-c {
+    background: $amber-50;
+    color: $amber-700;
+    border: 1px solid $amber-200;
+  }
+}
+
+.compliance-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  
+  &.compliance-yes {
+    background: $green-50;
+    color: $green-700;
+    border: 1px solid $green-200;
+  }
+  
+  &.compliance-no {
+    background: $red-50;
+    color: $red-700;
+    border: 1px solid $red-200;
+  }
+}
+
+.preview-footer {
+  padding-top: 15px;
+  border-top: 1px solid $gray-200;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  .stat-label {
+    font-size: 12px;
+    color: $gray-500;
+  }
+  
+  .stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: $gray-900;
+  }
+}
+
+.report-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.generate-report-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: $blue-600;
+  color: $white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  
+  &:hover:not(:disabled) {
+    background: $blue-700;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  &.excel-btn {
+    background: $green-600;
+    
+    &:hover:not(:disabled) {
+      background: $green-700;
+    }
+  }
+}

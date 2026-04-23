@@ -1,0 +1,684 @@
+<div class="page-content">
+      <!-- User Info Header - Top of Page -->
+    <div class="user-header-top">
+      <div class="user-info">
+        <div class="user-avatar">
+          <span class="avatar-text">{{ user.initials }}</span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-header-section">
+      <div class="header-content">
+        <div>
+          <h2>Transaction Management</h2>
+          <p class="page-description">Track all financial transactions, payments, and expenses</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-outline" (click)="exportTransactions()">
+            <span class="icon">📥</span>
+            Export
+          </button>
+          <button class="btn btn-primary" (click)="newTransaction()">
+            <span class="icon">🧾</span>
+            New Transaction
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of transactionStats">
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-title">{{ stat.title }}</p>
+            <h2 class="stat-value">{{ stat.value }}</h2>
+            <p class="stat-change" [ngClass]="stat.change.startsWith('+') ? 'text-success' : 'text-danger'">
+              {{ stat.change }}
+            </p>
+          </div>
+          <div class="stat-icon" [ngClass]="stat.color">
+            <span>{{ stat.icon }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction Type Tabs -->
+    <div class="tabs-container">
+      <div class="tabs-list">
+        <button 
+          class="tab-trigger" 
+          [class.active]="activeTab === 'all'"
+          (click)="setActiveTab('all')">
+          All
+        </button>
+        <button 
+          class="tab-trigger" 
+          [class.active]="activeTab === 'sales'"
+          (click)="setActiveTab('sales')">
+          Sales
+        </button>
+        <button 
+          class="tab-trigger" 
+          [class.active]="activeTab === 'purchases'"
+          (click)="setActiveTab('purchases')">
+          Purchases
+        </button>
+        <button 
+          class="tab-trigger" 
+          [class.active]="activeTab === 'loans'"
+          (click)="setActiveTab('loans')">
+          Loans
+        </button>
+        <button 
+          class="tab-trigger" 
+          [class.active]="activeTab === 'momo'"
+          (click)="setActiveTab('momo')">
+          Mobile Money
+        </button>
+        <button 
+          class="tab-trigger" 
+          [class.active]="activeTab === 'commissions'"
+          (click)="setActiveTab('commissions')">
+          Commissions
+        </button>
+      </div>
+
+      <div class="tab-content">
+        <!-- Quick Actions -->
+        <div class="quick-actions-grid">
+          <div class="quick-action-card border-success" (click)="recordSale()">
+            <div class="quick-action-icon bg-success-light">
+              <span>🛒</span>
+            </div>
+            <div class="quick-action-content">
+              <h4>Record Sale</h4>
+              <p class="quick-action-desc">Produce to cooperative</p>
+            </div>
+          </div>
+          <div class="quick-action-card border-info" (click)="inputPurchase()">
+            <div class="quick-action-icon bg-info-light">
+              <span>📦</span>
+            </div>
+            <div class="quick-action-content">
+              <h4>Input Purchase</h4>
+              <p class="quick-action-desc">Farmer buys supplies</p>
+            </div>
+          </div>
+          <div class="quick-action-card border-warning" (click)="loanPayment()">
+            <div class="quick-action-icon bg-warning-light">
+              <span>💳</span>
+            </div>
+            <div class="quick-action-content">
+              <h4>Loan Payment</h4>
+              <p class="quick-action-desc">Disbursement/Repayment</p>
+            </div>
+          </div>
+          <div class="quick-action-card border-primary" (click)="reconcile()">
+            <div class="quick-action-icon bg-primary-light">
+              <span>✅</span>
+            </div>
+            <div class="quick-action-content">
+              <h4>Reconcile</h4>
+              <p class="quick-action-desc">Match payments</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters-card">
+      <div class="filters-content">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by transaction ID, member, or description..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearchChange()"
+          />
+        </div>
+        <select class="filter-select" [(ngModel)]="selectedType" (ngModelChange)="onTypeChange()">
+          <option *ngFor="let type of typeOptions" [value]="type.value">{{ type.label }}</option>
+        </select>
+        <select class="filter-select" [(ngModel)]="selectedStatus" (ngModelChange)="onStatusChange()">
+          <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
+        </select>
+        <select class="filter-select" [(ngModel)]="selectedCategory" (ngModelChange)="onCategoryChange()">
+          <option *ngFor="let category of categoryOptions" [value]="category.value">{{ category.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Type</th>
+              <th>Member</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let txn of paginatedTransactions">
+              <td>{{ txn.id }}</td>
+              <td>
+                <span class="badge" [ngClass]="txn.type === 'credit' ? 'badge-success' : 'badge-danger'">
+                  {{ txn.type === 'credit' ? 'Credit' : 'Debit' }}
+                </span>
+              </td>
+              <td>{{ txn.member }}</td>
+              <td>{{ txn.description }}</td>
+              <td [ngClass]="txn.type === 'credit' ? 'text-success' : 'text-danger'">
+                {{ txn.amount }}
+              </td>
+              <td>{{ txn.category }}</td>
+              <td>
+                <div class="cell-content">
+                  <span class="cell-icon">📅</span>
+                  <span>{{ txn.date }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-outline" [ngClass]="getStatusColor(txn.status)">
+                  {{ txn.status }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-action btn-view" (click)="viewTransaction(txn)" title="View Details">👁️</button>
+                  <button class="btn-action btn-edit" (click)="editTransaction(txn)" title="Edit Transaction">✏️</button>
+                  <button class="btn-action btn-delete" (click)="deleteTransaction(txn)" title="Delete Transaction">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedTransactions.length === 0">
+              <td colspan="9" class="no-data">No transactions found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination-wrapper" *ngIf="totalPages > 1">
+        <nav class="pagination" aria-label="pagination">
+          <ul class="pagination-content">
+            <li class="pagination-item">
+              <button 
+                class="pagination-link pagination-previous" 
+                (click)="previousPage()"
+                [disabled]="currentPage === 1"
+                [class.disabled]="currentPage === 1">
+                <span>‹</span>
+                <span class="pagination-text">Previous</span>
+              </button>
+            </li>
+            
+            <li class="pagination-item" *ngFor="let page of getPageNumbers()">
+              <button 
+                class="pagination-link" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            </li>
+            
+            <li class="pagination-item">
+              <button 
+                class="pagination-link pagination-next" 
+                (click)="nextPage()"
+                [disabled]="currentPage === totalPages"
+                [class.disabled]="currentPage === totalPages">
+                <span class="pagination-text">Next</span>
+                <span>›</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        <div class="pagination-info">
+          Showing {{ getPaginationStart() }} to {{ getPaginationEnd() }} of {{ getTotalItems() }} transactions
+        </div>
+      </div>
+    </div>
+
+        <!-- Payment Reconciliation Section -->
+        <div class="reconciliation-card">
+          <div class="reconciliation-header">
+            <div>
+              <h3>Payment Reconciliation</h3>
+              <p class="reconciliation-desc">Match and verify payment records</p>
+            </div>
+            <button class="btn btn-primary" (click)="startReconciliation()">
+              <span class="icon">✅</span>
+              Start Reconciliation
+            </button>
+          </div>
+
+          <div class="reconciliation-stats">
+            <div class="reconciliation-stat bg-warning-light border-warning">
+              <p class="reconciliation-stat-label">Pending Reconciliation</p>
+              <h3 class="reconciliation-stat-value text-warning">23 Transactions</h3>
+              <p class="reconciliation-stat-amount">15.2M XAF</p>
+            </div>
+            <div class="reconciliation-stat bg-success-light border-success">
+              <p class="reconciliation-stat-label">Reconciled Today</p>
+              <h3 class="reconciliation-stat-value text-success">45 Transactions</h3>
+              <p class="reconciliation-stat-amount">28.7M XAF</p>
+            </div>
+            <div class="reconciliation-stat bg-danger-light border-danger">
+              <p class="reconciliation-stat-label">Discrepancies</p>
+              <h3 class="reconciliation-stat-value text-danger">3 Transactions</h3>
+              <p class="reconciliation-stat-amount">1.2M XAF</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- New Transaction Modal -->
+<div class="modal-overlay" *ngIf="showNewTransactionModal" (click)="closeNewTransactionModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Record New Transaction</h2>
+      <button class="modal-close" (click)="closeNewTransactionModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form class="transaction-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="transactionType">Transaction Type *</label>
+            <select
+              id="transactionType"
+              [(ngModel)]="transactionForm.type"
+              name="type"
+              class="form-input"
+              required
+            >
+              <option value="credit">Credit (+)</option>
+              <option value="debit">Debit (-)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="member">Member/Farmer *</label>
+            <input
+              type="text"
+              id="member"
+              [(ngModel)]="transactionForm.member"
+              name="member"
+              class="form-input"
+              placeholder="Enter member name"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="amount">Amount (XAF) *</label>
+            <input
+              type="number"
+              id="amount"
+              [(ngModel)]="transactionForm.amount"
+              name="amount"
+              class="form-input"
+              placeholder="0.00"
+              min="0.01"
+              step="0.01"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="date">Date *</label>
+            <input
+              type="date"
+              id="date"
+              [(ngModel)]="transactionForm.date"
+              name="date"
+              class="form-input"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="method">Payment Method</label>
+            <select
+              id="method"
+              [(ngModel)]="transactionForm.method"
+              name="method"
+              class="form-input"
+            >
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Mobile Money">Mobile Money</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select
+              id="category"
+              [(ngModel)]="transactionForm.category"
+              name="category"
+              class="form-input"
+            >
+              <option value="Sales">Sales</option>
+              <option value="Expenses">Expenses</option>
+              <option value="Loans">Loans</option>
+              <option value="Payments">Payments</option>
+              <option value="Commissions">Commissions</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea
+            id="description"
+            [(ngModel)]="transactionForm.description"
+            name="description"
+            class="form-textarea"
+            placeholder="Enter transaction description/details"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeNewTransactionModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="submitTransaction()">Record Transaction</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Transaction Modal -->
+<div class="modal-overlay" *ngIf="showEditTransactionModal && selectedTransaction" (click)="closeEditTransactionModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Transaction</h2>
+      <button class="modal-close" (click)="closeEditTransactionModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form class="transaction-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editTransactionType">Transaction Type *</label>
+            <select
+              id="editTransactionType"
+              [(ngModel)]="transactionForm.type"
+              name="editType"
+              class="form-input"
+              required
+            >
+              <option value="credit">Credit (+)</option>
+              <option value="debit">Debit (-)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editMember">Member/Farmer *</label>
+            <input
+              type="text"
+              id="editMember"
+              [(ngModel)]="transactionForm.member"
+              name="editMember"
+              class="form-input"
+              placeholder="Enter member name"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editAmount">Amount (XAF) *</label>
+            <input
+              type="number"
+              id="editAmount"
+              [(ngModel)]="transactionForm.amount"
+              name="editAmount"
+              class="form-input"
+              placeholder="0.00"
+              min="0.01"
+              step="0.01"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="editDate">Date *</label>
+            <input
+              type="date"
+              id="editDate"
+              [(ngModel)]="transactionForm.date"
+              name="editDate"
+              class="form-input"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editMethod">Payment Method</label>
+            <select
+              id="editMethod"
+              [(ngModel)]="transactionForm.method"
+              name="editMethod"
+              class="form-input"
+            >
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Mobile Money">Mobile Money</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editCategory">Category</label>
+            <select
+              id="editCategory"
+              [(ngModel)]="transactionForm.category"
+              name="editCategory"
+              class="form-input"
+            >
+              <option value="Sales">Sales</option>
+              <option value="Expenses">Expenses</option>
+              <option value="Loans">Loans</option>
+              <option value="Payments">Payments</option>
+              <option value="Commissions">Commissions</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editDescription">Description *</label>
+          <textarea
+            id="editDescription"
+            [(ngModel)]="transactionForm.description"
+            name="editDescription"
+            class="form-textarea"
+            placeholder="Enter transaction description/details"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeEditTransactionModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="updateTransaction()">Update Transaction</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Transaction Modal -->
+<div class="modal-overlay" *ngIf="showViewTransactionModal && selectedTransaction" (click)="closeViewTransactionModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Transaction Details</h2>
+      <button class="modal-close" (click)="closeViewTransactionModal()">×</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedTransaction">
+      <div class="transaction-details">
+        <div class="detail-section">
+          <div class="detail-row">
+            <span class="detail-label">Transaction ID:</span>
+            <span class="detail-value">{{ selectedTransaction.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date:</span>
+            <span class="detail-value">{{ selectedTransaction.date }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value">
+              <span class="badge" [ngClass]="selectedTransaction.type === 'credit' ? 'badge-success' : 'badge-danger'">
+                {{ selectedTransaction.type === 'credit' ? 'Credit' : 'Debit' }}
+              </span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Member:</span>
+            <span class="detail-value">{{ selectedTransaction.member }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Description:</span>
+            <span class="detail-value">{{ selectedTransaction.description }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount:</span>
+            <span class="detail-value" [ngClass]="selectedTransaction.type === 'credit' ? 'text-success' : 'text-danger'">
+              {{ selectedTransaction.amount }}
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Category:</span>
+            <span class="detail-value">{{ selectedTransaction.category }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">
+              <span class="badge badge-outline" [ngClass]="getStatusColor(selectedTransaction.status)">
+                {{ selectedTransaction.status }}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeViewTransactionModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" *ngIf="showExportModal" (click)="closeExportModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Export Transactions</h2>
+      <button class="modal-close" (click)="closeExportModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="export-info">
+        <p><strong>{{ allFilteredTransactions.length }}</strong> transactions will be exported</p>
+      </div>
+
+      <form class="export-form">
+        <div class="form-group">
+          <label>Export Format</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="format" value="excel" checked />
+              <span class="radio-label">
+                <strong>Excel</strong>
+                <small>Microsoft Excel spreadsheet (.xlsx)</small>
+              </span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="format" value="csv" />
+              <span class="radio-label">
+                <strong>CSV</strong>
+                <small>Comma-separated values (.csv)</small>
+              </span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="format" value="pdf" />
+              <span class="radio-label">
+                <strong>PDF</strong>
+                <small>Portable Document Format (.pdf)</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Date Range</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="dateRange" value="all" [(ngModel)]="exportDateRange" />
+              <span class="radio-label">
+                <strong>All Data</strong>
+                <small>Export all transactions</small>
+              </span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="dateRange" value="custom" [(ngModel)]="exportDateRange" />
+              <span class="radio-label">
+                <strong>Custom Range</strong>
+                <small>Select specific date range</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="exportDateRange === 'custom'">
+          <div class="form-group">
+            <label for="startDate">Start Date</label>
+            <input
+              type="date"
+              id="startDate"
+              [(ngModel)]="exportStartDate"
+              name="startDate"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="endDate">End Date</label>
+            <input
+              type="date"
+              id="endDate"
+              [(ngModel)]="exportEndDate"
+              name="endDate"
+              class="form-input"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeExportModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="performExport()">Export Data</button>
+    </div>
+  </div>
+</div>

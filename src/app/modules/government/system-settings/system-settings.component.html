@@ -1,0 +1,166 @@
+<div class="main-content">
+  <div class="page-content">
+
+    <div class="page-header">
+      <div class="header-left">
+        <h1>System Settings</h1>
+        <p class="page-description">Configure platform globals, notifications, and security protocols.</p>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar" style="background:#2d3a8c"><span>GA</span></div>
+        <div class="user-details">
+          <span class="user-name">Government Admin</span>
+          <span class="user-role">Super Administrator</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert alert-success" *ngIf="successMessage">
+       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      {{ successMessage }}
+    </div>
+
+    <!-- Settings Container -->
+    <div class="settings-container">
+      
+      <!-- Vertical Sidebar Tabs -->
+      <div class="settings-sidebar">
+        <div class="nav-section-title">Configuration</div>
+        <button class="settings-tab" [class.active]="activeTab === 'general'" (click)="switchTab('general')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          General Parameters
+        </button>
+        <button class="settings-tab" [class.active]="activeTab === 'notifications'" (click)="switchTab('notifications')">
+           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Notification Hub
+        </button>
+        <button class="settings-tab" [class.active]="activeTab === 'security'" (click)="switchTab('security')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Security & Access
+        </button>
+      </div>
+
+      <!-- Settings Content -->
+      <div class="settings-content-area">
+
+        <!-- GENERAL TAB -->
+        <div class="tab-pane" *ngIf="activeTab === 'general'">
+          <h2>General Configurations</h2>
+          <p class="pane-subtitle">Update basic platform details and global settings.</p>
+
+          <div class="form-group">
+            <label>Platform Name</label>
+            <input type="text" [(ngModel)]="settings.platformName" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label>Support Contact Email</label>
+            <input type="email" [(ngModel)]="settings.contactEmail" class="form-control" />
+          </div>
+
+          <div class="divider"></div>
+          
+          <div class="toggle-group">
+            <div class="toggle-info">
+              <h4>Allow New Registrations</h4>
+              <p>When disabled, Cooperatives cannot add new farmers.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="settings.allowRegistration">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="toggle-group">
+            <div class="toggle-info">
+              <h4>Maintenance Mode</h4>
+              <p>Disable regular platform access for system upgrades.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="settings.maintenanceMode">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- NOTIFICATIONS TAB -->
+        <div class="tab-pane" *ngIf="activeTab === 'notifications'">
+          <h2>Notification Hub</h2>
+          <p class="pane-subtitle">Manage how alerts are distributed globally.</p>
+
+          <div class="toggle-group hoverable">
+            <div class="toggle-info">
+              <h4>Email Alerts</h4>
+              <p>Send crucial weekly summaries and report generation notices via email.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="settings.emailAlerts">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="toggle-group hoverable">
+            <div class="toggle-info">
+              <h4>SMS Alerts (Farmers)</h4>
+              <p>Allows broadcasting market prices and weather info to farmers' phones directly.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="settings.smsAlerts">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="toggle-group hoverable">
+            <div class="toggle-info">
+              <h4>Push Notifications</h4>
+              <p>Enable in-app push notifications for Cooperative Managers.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="settings.pushNotifications">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- SECURITY TAB -->
+        <div class="tab-pane" *ngIf="activeTab === 'security'">
+          <h2>Security & Access</h2>
+          <p class="pane-subtitle">Enforce platform security policies.</p>
+
+          <div class="form-group">
+            <label>Global Session Timeout (Minutes)</label>
+            <select [(ngModel)]="settings.sessionTimeout" class="form-control">
+              <option value="15">15 Minutes</option>
+              <option value="30">30 Minutes</option>
+              <option value="60">1 Hour</option>
+              <option value="120">2 Hours</option>
+            </select>
+            <small class="form-hint">Users will be automatically disconnected if inactive.</small>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="toggle-group">
+            <div class="toggle-info">
+              <h4>Enforce Two-Factor Auth (Government Admins)</h4>
+              <p>Require OTP on top of passwords for sensitive roles.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="settings.twoFactorAuth">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="btn btn-primary" (click)="saveSettings()" [disabled]="isSaving">
+            <svg *ngIf="!isSaving" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {{ isSaving ? 'Saving parameters...' : 'Save Configuration' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

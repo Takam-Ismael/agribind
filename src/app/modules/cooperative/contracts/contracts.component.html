@@ -1,0 +1,773 @@
+<div class="page-content">
+    <!-- User Info Header - Top of Page -->
+    <div class="user-header-top">
+      <div class="user-info">
+        <div class="user-avatar">
+          <span class="avatar-text">{{ user.initials }}</span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header-section">
+      <div class="header-content">
+        <div>
+          <h2>Farmer Contracts Management</h2>
+          <p class="page-description">
+            Manage and track agreements between the cooperative and farmers
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" (click)="openNewContractDialog()">
+            <span class="icon">➕</span>
+            New Contract
+          </button>
+          <button class="btn btn-outline" (click)="exportData()">
+            <span class="icon">📥</span>
+            Export
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Stats -->
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of contractStats">
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-title">{{ stat.label }}</p>
+            <h2 class="stat-value">{{ stat.value }}</h2>
+            <div class="stat-change-row">
+              <span class="stat-change" [ngClass]="{
+                'text-primary': stat.trend === 'up',
+                'text-secondary': stat.trend === 'warning',
+                'text-muted': stat.trend === 'neutral'
+              }">{{ stat.change }}</span>
+              <span class="stat-change-label">{{ stat.changeLabel }}</span>
+            </div>
+          </div>
+          <div class="stat-icon" [ngClass]="stat.color">
+            <span>{{ stat.icon }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Templates Card -->
+    <div class="contract-templates-card">
+      <div class="contract-templates-content">
+        <div class="contract-templates-icon">
+          <span>✍️</span>
+        </div>
+        <div class="contract-templates-details">
+          <h3>Contract Templates</h3>
+          <p class="contract-templates-desc">
+            Create standardized agreements for cooperative-farmer relationships
+          </p>
+          <div class="contract-templates-actions">
+            <button class="btn btn-outline">Production Agreement</button>
+            <button class="btn btn-outline">Supply Contract</button>
+            <button class="btn btn-outline">Input Financing</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+      <div class="filters-content">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by contract ID, farmer, or type..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearchChange()"
+          />
+        </div>
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedContractType"
+          (ngModelChange)="onContractTypeChange()"
+        >
+          <option *ngFor="let type of contractTypes" [value]="type.value">
+            {{ type.label }}
+          </option>
+        </select>
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedContractStatus"
+          (ngModelChange)="onContractStatusChange()"
+        >
+          <option *ngFor="let status of contractStatusOptions" [value]="status.value">
+            {{ status.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Contracts Table -->
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Contract ID</th>
+              <th>Type</th>
+              <th>Member/Partner</th>
+              <th>Product/Service</th>
+              <th>Quantity</th>
+              <th>Value (XAF)</th>
+              <th>Period</th>
+              <th>Progress</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let contract of paginatedContracts">
+              <td>{{ contract.id }}</td>
+              <td>
+                <span class="badge badge-outline">{{ getContractTypeLabel(contract.type) }}</span>
+              </td>
+              <td>{{ contract.member }}</td>
+              <td>{{ contract.product }}</td>
+              <td>{{ contract.quantity }}</td>
+              <td>{{ contract.value }}</td>
+              <td>
+                <div class="cell-content">
+                  <span class="cell-icon">📅</span>
+                  <span>{{ getDaysRemaining(contract.endDate) }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="progress-cell">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="contract.progress"></div>
+                  </div>
+                  <span class="progress-text">{{ contract.progress }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getContractStatusBadge(contract.status)">
+                  {{ contract.status }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-action btn-view" (click)="viewContract(contract)" title="View Details">👁️</button>
+                  <button class="btn-action btn-edit" (click)="editContract(contract)" title="Edit Contract">✏️</button>
+                  <button class="btn-action btn-download" (click)="downloadContract(contract)" title="Download">📥</button>
+                  <button class="btn-action btn-delete" (click)="deleteContract(contract)" title="Delete Contract">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedContracts.length === 0">
+              <td colspan="10" class="no-data">No contracts found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination-wrapper" *ngIf="totalPages > 1">
+        <nav class="pagination" aria-label="pagination">
+          <ul class="pagination-content">
+            <li class="pagination-item">
+              <button 
+                class="pagination-link pagination-previous" 
+                (click)="previousPage()"
+                [disabled]="currentPage === 1"
+                [class.disabled]="currentPage === 1">
+                <span>‹</span>
+                <span class="pagination-text">Previous</span>
+              </button>
+            </li>
+            
+            <li class="pagination-item" *ngFor="let page of getPageNumbers()">
+              <button 
+                class="pagination-link" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            </li>
+            
+            <li class="pagination-item">
+              <button 
+                class="pagination-link pagination-next" 
+                (click)="nextPage()"
+                [disabled]="currentPage === totalPages"
+                [class.disabled]="currentPage === totalPages">
+                <span class="pagination-text">Next</span>
+                <span>›</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        <div class="pagination-info">
+          Showing {{ getPaginationStart() }} to {{ getPaginationEnd() }} of {{ getTotalItems() }} contracts
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- New Contract Dialog Modal -->
+<div class="modal-overlay" *ngIf="showNewContractDialog" (click)="closeNewContractDialog()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>✍️ Create Farmer Contract</h2>
+        <p class="modal-description">
+          Create a new agreement between the cooperative and farmer for production, supply, or financing
+        </p>
+      </div>
+      <button class="modal-close" (click)="closeNewContractDialog()">×</button>
+    </div>
+    <div class="modal-body">
+      <form class="contract-form">
+        <!-- Contract Basics -->
+        <div class="form-section">
+          <h4>Contract Information</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="farmerSelect">Farmer Name / ID *</label>
+              <select
+                id="farmerSelect"
+                [(ngModel)]="contractForm.farmerId"
+                name="farmerId"
+                class="form-input"
+                (change)="onFarmerChange($event)"
+                required
+              >
+                <option value="">Search farmer...</option>
+                <option *ngFor="let farmer of farmerSearchResults" [value]="farmer.userId">
+                  {{ farmer.name }} ({{ farmer.userId }})
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="contractType">Contract Type *</label>
+              <select
+                id="contractType"
+                [(ngModel)]="contractForm.contractType"
+                name="contractType"
+                class="form-input"
+                required
+              >
+                <option value="">Select type</option>
+                <option value="production">Production Agreement</option>
+                <option value="supply">Supply Contract</option>
+                <option value="financing">Input Financing Agreement</option>
+                <option value="marketing">Marketing Agreement</option>
+                <option value="buyback">Guaranteed Buyback</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="contractTitle">Contract Title *</label>
+            <input
+              type="text"
+              id="contractTitle"
+              [(ngModel)]="contractForm.contractTitle"
+              name="contractTitle"
+              class="form-input"
+              placeholder="e.g., Cocoa Production Agreement 2025-2026"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Production Details -->
+        <div class="form-section">
+          <h4>Production Terms</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cropType">Crop/Product *</label>
+              <select
+                id="cropType"
+                [(ngModel)]="contractForm.cropType"
+                name="cropType"
+                class="form-input"
+                required
+              >
+                <option value="">Select crop</option>
+                <option value="Cocoa">Cocoa</option>
+                <option value="Coffee">Coffee</option>
+                <option value="Cotton">Cotton</option>
+                <option value="Palm Oil">Palm Oil</option>
+                <option value="Cassava">Cassava</option>
+                <option value="Maize">Maize</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="targetQuantity">Target Quantity (MT) *</label>
+              <input
+                type="number"
+                id="targetQuantity"
+                [(ngModel)]="contractForm.targetQuantity"
+                name="targetQuantity"
+                class="form-input"
+                step="0.1"
+                placeholder="0.0"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="farmSize">Farm Size (hectares)</label>
+              <input
+                type="number"
+                id="farmSize"
+                [(ngModel)]="contractForm.farmSize"
+                name="farmSize"
+                class="form-input"
+                step="0.1"
+                placeholder="0.0"
+              />
+            </div>
+            <div class="form-group">
+              <label for="qualityStandard">Quality Standard</label>
+              <select
+                id="qualityStandard"
+                [(ngModel)]="contractForm.qualityStandard"
+                name="qualityStandard"
+                class="form-input"
+              >
+                <option value="premium">Premium (Grade A)</option>
+                <option value="standard">Standard (Grade B)</option>
+                <option value="basic">Basic (Grade C)</option>
+                <option value="organic">Organic Certified</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contract Period -->
+        <div class="form-section">
+          <h4>Contract Period</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="startDate">Start Date *</label>
+              <input
+                type="date"
+                id="startDate"
+                [(ngModel)]="contractForm.startDate"
+                name="startDate"
+                class="form-input"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="endDate">End Date *</label>
+              <input
+                type="date"
+                id="endDate"
+                [(ngModel)]="contractForm.endDate"
+                name="endDate"
+                class="form-input"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Duration (months)</label>
+              <input
+                type="text"
+                [value]="calculateDuration()"
+                class="form-input"
+                readonly
+                placeholder="Auto-calculated"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="renewalOption">Renewal Option</label>
+            <select
+              id="renewalOption"
+              [(ngModel)]="contractForm.renewalOption"
+              name="renewalOption"
+              class="form-input"
+            >
+              <option value="auto">Auto-renewable</option>
+              <option value="mutual">By mutual agreement</option>
+              <option value="none">Non-renewable</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Financial Terms -->
+        <div class="form-section">
+          <h4>Financial Terms</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pricingType">Pricing Structure</label>
+              <select
+                id="pricingType"
+                [(ngModel)]="contractForm.pricingType"
+                name="pricingType"
+                class="form-input"
+              >
+                <option value="fixed">Fixed Price</option>
+                <option value="market">Market Price</option>
+                <option value="minimum">Minimum Guaranteed Price</option>
+                <option value="formula">Formula-based</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="agreedPrice">Agreed Price (XAF/MT)</label>
+              <input
+                type="number"
+                id="agreedPrice"
+                [(ngModel)]="contractForm.agreedPrice"
+                name="agreedPrice"
+                class="form-input"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="paymentTerms">Payment Terms</label>
+              <select
+                id="paymentTerms"
+                [(ngModel)]="contractForm.paymentTerms"
+                name="paymentTerms"
+                class="form-input"
+              >
+                <option value="immediate">Immediate Payment</option>
+                <option value="7days">Within 7 days</option>
+                <option value="15days">Within 15 days</option>
+                <option value="30days">Within 30 days</option>
+                <option value="delivery">Upon delivery</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="advancePayment">Advance Payment (%)</label>
+              <input
+                type="number"
+                id="advancePayment"
+                [(ngModel)]="contractForm.advancePayment"
+                name="advancePayment"
+                class="form-input"
+                step="0.1"
+                placeholder="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms & Conditions -->
+        <div class="form-section">
+          <h4>Terms & Conditions</h4>
+          <div class="form-group">
+            <label for="farmerObligations">Farmer Obligations *</label>
+            <textarea
+              id="farmerObligations"
+              [(ngModel)]="contractForm.farmerObligations"
+              name="farmerObligations"
+              class="form-textarea"
+              rows="3"
+              placeholder="List the farmer's responsibilities and obligations..."
+              required
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="cooperativeObligations">Cooperative Obligations *</label>
+            <textarea
+              id="cooperativeObligations"
+              [(ngModel)]="contractForm.cooperativeObligations"
+              name="cooperativeObligations"
+              class="form-textarea"
+              rows="3"
+              placeholder="List the cooperative's responsibilities and obligations..."
+              required
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Compliance & Penalties -->
+        <div class="form-section">
+          <h4>Compliance & Penalties</h4>
+          <div class="form-group">
+            <label for="penaltyClause">Penalty for Non-compliance</label>
+            <textarea
+              id="penaltyClause"
+              [(ngModel)]="contractForm.penaltyClause"
+              name="penaltyClause"
+              class="form-textarea"
+              rows="2"
+              placeholder="Specify penalties for breach of contract..."
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="terminationClause">Termination Conditions</label>
+            <textarea
+              id="terminationClause"
+              [(ngModel)]="contractForm.terminationClause"
+              name="terminationClause"
+              class="form-textarea"
+              rows="2"
+              placeholder="Specify conditions under which contract can be terminated..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Additional Notes -->
+        <div class="form-group">
+          <label for="notes">Additional Notes</label>
+          <textarea
+            id="notes"
+            [(ngModel)]="contractForm.notes"
+            name="notes"
+            class="form-textarea"
+            rows="3"
+            placeholder="Any other terms, conditions, or special arrangements..."
+          ></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeNewContractDialog()">Cancel</button>
+      <button class="btn btn-primary" (click)="createContract()">Create Contract</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Contract Modal -->
+<div class="modal-overlay" *ngIf="showViewContractModal && selectedContract" (click)="closeViewContractModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Contract Details</h2>
+      <button class="modal-close" (click)="closeViewContractModal()">×</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedContract">
+      <div class="contract-details">
+        <div class="detail-section">
+          <div class="detail-row">
+            <span class="detail-label">Contract ID:</span>
+            <span class="detail-value">{{ selectedContract.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value">{{ getContractTypeLabel(selectedContract.type) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Member:</span>
+            <span class="detail-value">{{ selectedContract.member }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Product/Service:</span>
+            <span class="detail-value">{{ selectedContract.product }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Quantity:</span>
+            <span class="detail-value">{{ selectedContract.quantity }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Value:</span>
+            <span class="detail-value">{{ selectedContract.value }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Period:</span>
+            <span class="detail-value">{{ getDaysRemaining(selectedContract.endDate) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Progress:</span>
+            <span class="detail-value">{{ selectedContract.progress }}%</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">
+              <span class="badge" [ngClass]="getContractStatusBadge(selectedContract.status)">
+                {{ selectedContract.status }}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeViewContractModal()">Close</button>
+      <button class="btn btn-primary" (click)="downloadContract(selectedContract)">Download Contract</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Contract Modal -->
+<div class="modal-overlay" *ngIf="showEditContractModal && selectedContract" (click)="closeEditContractModal()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Contract</h2>
+      <button class="modal-close" (click)="closeEditContractModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="contract-edit-form" *ngIf="selectedContract">
+        <form class="contract-form">
+          <!-- Contract Basics -->
+          <div class="form-section">
+            <h4>Contract Information</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editContractType">Contract Type</label>
+                <select
+                  id="editContractType"
+                  [(ngModel)]="selectedContract.type"
+                  name="editContractType"
+                  class="form-input"
+                >
+                  <option value="production">Production Agreement</option>
+                  <option value="supply">Supply Contract</option>
+                  <option value="sales">Sales Agreement</option>
+                  <option value="lease">Equipment Lease</option>
+                  <option value="service">Service Contract</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="editProduct">Product/Service</label>
+                <input
+                  type="text"
+                  id="editProduct"
+                  [(ngModel)]="selectedContract.product"
+                  name="editProduct"
+                  class="form-input"
+                  placeholder="e.g., Cocoa, Equipment, Services"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editQuantity">Quantity</label>
+                <input
+                  type="number"
+                  id="editQuantity"
+                  [(ngModel)]="selectedContract.quantity"
+                  name="editQuantity"
+                  class="form-input"
+                  placeholder="100"
+                  min="0"
+                  step="0.1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="editValue">Contract Value (XAF)</label>
+                <input
+                  type="number"
+                  id="editValue"
+                  [(ngModel)]="selectedContract.value"
+                  name="editValue"
+                  class="form-input"
+                  placeholder="500000"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Dates and Terms -->
+          <div class="form-section">
+            <h4>Dates and Terms</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editStartDate">Start Date</label>
+                <input
+                  type="date"
+                  id="editStartDate"
+                  [(ngModel)]="selectedContract.startDate"
+                  name="editStartDate"
+                  class="form-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="editEndDate">End Date</label>
+                <input
+                  type="date"
+                  id="editEndDate"
+                  [(ngModel)]="selectedContract.endDate"
+                  name="editEndDate"
+                  class="form-input"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="editStatus">Contract Status</label>
+              <select
+                id="editStatus"
+                [(ngModel)]="selectedContract.status"
+                name="editStatus"
+                class="form-input"
+              >
+                <option value="Active">Active</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Terminated">Terminated</option>
+                <option value="Expired">Expired</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Progress and Notes -->
+          <div class="form-section">
+            <h4>Progress and Notes</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editProgress">Progress (%)</label>
+                <input
+                  type="number"
+                  id="editProgress"
+                  [(ngModel)]="selectedContract.progress"
+                  name="editProgress"
+                  class="form-input"
+                  placeholder="75"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              <div class="form-group">
+                <label for="editPriority">Priority Level</label>
+                <select
+                  id="editPriority"
+                  class="form-input"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="editNotes">Additional Notes</label>
+              <textarea
+                id="editNotes"
+                class="form-textarea"
+                rows="3"
+                placeholder="Any additional notes or special conditions..."
+              ></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeEditContractModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="updateContract()">Update Contract</button>
+    </div>
+  </div>
+</div>

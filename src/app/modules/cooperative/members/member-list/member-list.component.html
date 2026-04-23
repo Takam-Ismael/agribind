@@ -1,0 +1,462 @@
+<div class="main-content">
+  <div class="page-content">
+
+    <!-- Header with User Info -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Member Management</h1>
+        <p class="page-description">Manage cooperative members, farmers, and cooperative managers</p>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar">
+          <span class="avatar-text">{{ user.initials }}</span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ getTotalMembers() }}</h3>
+          <p class="stat-label">Total Members</p>
+          <p class="stat-trend positive">+12 this month</p>
+        </div>
+        <div class="stat-icon green"><i class="fas fa-users"></i></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ getFarmersCount() }}</h3>
+          <p class="stat-label">Farmers</p>
+          <p class="stat-trend positive">{{ getFarmersPercentage() }}% of members</p>
+        </div>
+        <div class="stat-icon green"><i class="fas fa-user-tie"></i></div>
+      </div>
+      <div class="stat-card" *ngIf="isCooperativeAdmin">
+        <div class="stat-info">
+          <h3>{{ managersCount }}</h3>
+          <p class="stat-label">Managers</p>
+          <p class="stat-trend positive">Cooperative managers</p>
+        </div>
+        <div class="stat-icon yellow"><i class="fas fa-user-shield"></i></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ getActiveMembers() }}</h3>
+          <p class="stat-label">Active Members</p>
+          <p class="stat-trend positive">{{ getActivePercentage() }}% active rate</p>
+        </div>
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+      </div>
+    </div>
+
+    <!-- Tab Bar (Cooperative Admin only) -->
+    <div class="tab-bar" *ngIf="isCooperativeAdmin">
+      <button class="tab-btn" [class.active]="activeTab === 'farmers'" (click)="switchTab('farmers')">
+        <i class="fas fa-user-tie"></i>&nbsp; Farmers
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'managers'" (click)="switchTab('managers')">
+        <i class="fas fa-user-shield"></i>&nbsp; Cooperative Managers
+      </button>
+    </div>
+
+    <!-- Search and Action Buttons -->
+    <div class="action-bar">
+      <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input
+          type="text"
+          [placeholder]="activeTab === 'managers' ? 'Search managers by name or ID...' : 'Search members by name, ID, or type...'"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+        />
+      </div>
+      <div class="button-group">
+        <button class="btn-primary" (click)="openAddMemberModal()" *ngIf="activeTab === 'farmers'">
+          <i class="fas fa-plus"></i> Add Farmer
+        </button>
+        <button class="btn-primary" (click)="openAddManagerModal()" *ngIf="activeTab === 'managers' && isCooperativeAdmin">
+          <i class="fas fa-plus"></i> New Manager
+        </button>
+        <button class="btn-outline" (click)="onExport()" [disabled]="exportLoading">
+          <i class="fas fa-download"></i> {{ exportLoading ? 'Exporting...' : 'Export CSV' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label><i class="fas fa-toggle-on"></i> Status</label>
+        <select [(ngModel)]="selectedStatus" (change)="onStatusChange()">
+          <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label><i class="fas fa-map-marker-alt"></i> Region</label>
+        <select [(ngModel)]="selectedRegion" (change)="onRegionChange()">
+          <option *ngFor="let region of regionOptions" [value]="region">{{ region }}</option>
+        </select>
+      </div>
+      <div class="filter-group" *ngIf="activeTab === 'farmers'">
+        <label><i class="fas fa-leaf"></i> Primary Crop</label>
+        <select [(ngModel)]="selectedCrop" (change)="onCropChange()">
+          <option *ngFor="let crop of cropOptions" [value]="crop">{{ crop }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ===== FARMERS TABLE ===== -->
+    <div class="table-container" *ngIf="activeTab === 'farmers'">
+      <table>
+        <thead>
+          <tr>
+            <th><i class="fas fa-hashtag"></i> AR Code</th>
+            <th><i class="fas fa-id-card"></i> Reg. Number</th>
+            <th><i class="fas fa-user"></i> Name</th>
+            <th><i class="fas fa-phone"></i> Contact</th>
+            <th><i class="fas fa-tag"></i> Type</th>
+            <th><i class="fas fa-map-pin"></i> Region</th>
+            <th><i class="fas fa-map-marker-alt"></i> Farm Location</th>
+            <th><i class="fas fa-seedling"></i> Primary Crop</th>
+            <th><i class="fas fa-circle"></i> Status</th>
+            <th><i class="fas fa-cog"></i> Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let member of paginatedMembers">
+            <td><span class="id-badge">{{ member.id }}</span></td>
+            <td><span class="reg-badge">{{ member.registrationNumber || 'N/A' }}</span></td>
+            <td>
+              <div class="name-cell">
+                <div class="member-avatar">{{ member.name.charAt(0) }}</div>
+                <span>{{ member.name }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="contact-cell">
+                <i class="fas fa-phone-alt"></i><span>{{ member.phone }}</span>
+              </div>
+            </td>
+            <td><span class="badge" [ngClass]="getTypeClass(member.type)">{{ member.type }}</span></td>
+            <td>
+              <div class="location-cell">
+                <i class="fas fa-map-marker-alt"></i><span>{{ member.region || 'N/A' }}</span>
+              </div>
+            </td>
+            <td><div class="farm-location-cell"><span class="gps-coords">{{ member.gpsCoordinates || 'Not set' }}</span></div></td>
+            <td><span class="crop-badge">{{ member.primaryCrop || 'N/A' }}</span></td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(member.status)">
+                <i class="fas fa-circle"></i> {{ member.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button class="view-btn"   (click)="openViewMemberModal(member)"      title="View">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="edit-btn"   (click)="openEditMemberModal(member)"      title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="qr-btn"     (click)="generateAccountAccessQR(member)"  title="Show QR Code">
+                  <i class="fas fa-qrcode"></i>
+                </button>
+                <button class="delete-btn" (click)="openDeleteConfirmModal(member)"   title="Delete">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="paginatedMembers.length === 0 && !isLoading">
+            <td colspan="10" class="no-data">
+              <i class="fas fa-inbox"></i>
+              <p>No farmers match the filters.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button (click)="previousPage()" [disabled]="currentPage === 1">← Prev</button>
+        <span>Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages">Next →</button>
+      </div>
+    </div>
+
+    <!-- ===== MANAGERS TABLE (Admin only) ===== -->
+    <div class="table-container" *ngIf="activeTab === 'managers' && isCooperativeAdmin">
+      <table>
+        <thead>
+          <tr>
+            <th><i class="fas fa-hashtag"></i> Manager ID</th>
+            <th><i class="fas fa-user"></i> Full Name</th>
+            <th><i class="fas fa-phone"></i> Contact</th>
+            <th><i class="fas fa-envelope"></i> Email</th>
+            <th><i class="fas fa-map-pin"></i> Region</th>
+            <th><i class="fas fa-circle"></i> Status</th>
+            <th><i class="fas fa-cog"></i> Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let mgr of paginatedMembers">
+            <td><span class="id-badge" style="background:#2d5a8e">{{ mgr.id }}</span></td>
+            <td>
+              <div class="name-cell">
+                <div class="member-avatar" style="background:#2d5a8e">{{ mgr.name.charAt(0) }}</div>
+                <span>{{ mgr.name }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="contact-cell">
+                <i class="fas fa-phone-alt"></i><span>{{ mgr.phone }}</span>
+              </div>
+            </td>
+            <td>{{ mgr.email || 'N/A' }}</td>
+            <td>
+              <div class="location-cell">
+                <i class="fas fa-map-marker-alt"></i><span>{{ mgr.region || 'N/A' }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(mgr.status)">
+                <i class="fas fa-circle"></i> {{ mgr.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button class="view-btn"   (click)="openViewMemberModal(mgr)"    title="View">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="edit-btn"   (click)="openEditMemberModal(mgr)"    title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="delete-btn" (click)="openDeleteConfirmModal(mgr)" title="Remove">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="paginatedMembers.length === 0 && !isLoading">
+            <td colspan="7" class="no-data">
+              <i class="fas fa-user-shield"></i>
+              <p>No managers found. Click "New Manager" to add one.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button (click)="previousPage()" [disabled]="currentPage === 1">← Prev</button>
+        <span>Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages">Next →</button>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="spinner"></div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage && !isLoading" class="alert alert-error">
+      <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+
+  </div>
+</div>
+
+<!-- Sub-component modals -->
+<app-member-form (memberAdded)="onMemberAdded($event)" (modalClosed)="onModalClosed()"></app-member-form>
+<app-edit-member-form (memberUpdated)="onMemberUpdated($event)" (modalClosed)="onModalClosed()"></app-edit-member-form>
+<app-member-detail (modalClosed)="onModalClosed()"></app-member-detail>
+<app-delete-member (memberDeleted)="onMemberDeleted($event)" (modalClosed)="onModalClosed()"></app-delete-member>
+
+
+<!-- ===== QR CODE MODAL ===== -->
+<div class="modal-overlay" *ngIf="showQRModal">
+  <div class="qr-modal" style="max-width:440px; text-align:center">
+
+    <div class="qr-modal-header">
+      <h2><i class="fas fa-qrcode"></i> Farmer QR Code</h2>
+      <button class="close-btn" (click)="closeQRModal()">✖</button>
+    </div>
+
+    <div class="qr-modal-body" style="padding:24px">
+
+      <!-- ── LOADING STATE ── -->
+      <div *ngIf="qrCodeLoading"
+           style="padding:48px 0; display:flex; flex-direction:column; align-items:center; gap:14px">
+        <div class="spinner"></div>
+        <p style="color:#64748b; margin:0; font-size:14px">Generating QR code...</p>
+      </div>
+
+      <!-- ── EXPIRED / NOT YET GENERATED ── -->
+      <div *ngIf="!qrCodeLoading && !selectedQRCode"
+           style="padding:40px 0; display:flex; flex-direction:column; align-items:center; gap:16px">
+        <i class="fas fa-qrcode" style="font-size:56px; color:#cbd5e1"></i>
+        <p style="color:#64748b; margin:0; font-size:14px; font-weight:600">QR code expired</p>
+        <p style="color:#94a3b8; margin:0; font-size:12px">
+          The previous code is no longer valid. Generate a new one.
+        </p>
+        <button
+          class="btn btn-primary"
+          (click)="currentQRMember && generateAccountAccessQR(currentQRMember)"
+          style="margin-top:8px">
+          <i class="fas fa-sync-alt"></i> Generate New QR Code
+        </button>
+      </div>
+
+      <!-- ── QR CODE CONTENT ── -->
+      <div *ngIf="!qrCodeLoading && selectedQRCode"
+           style="display:flex; flex-direction:column; align-items:center; gap:16px">
+
+        <!-- Farmer name -->
+        <p style="color:#1e293b; font-size:14px; font-weight:700; margin:0">
+          <i class="fas fa-user" style="color:#16a34a"></i>
+          {{ currentQRMember?.name }}
+        </p>
+
+        <!-- Info text -->
+        <p style="color:#64748b; font-size:12px; margin:0; line-height:1.6">
+          <i class="fas fa-info-circle"></i>
+          The farmer scans this QR code with the Agribind mobile app to log in instantly.
+        </p>
+
+        <!-- QR Image -->
+        <div style="position:relative; display:inline-block">
+          <img
+            *ngIf="selectedQRCode.qrCodeImage"
+            [src]="getSafeQRCodeUrl()"
+            alt="QR Code"
+            style="width:230px; height:230px; border:1px solid #e2e8f0;
+                   border-radius:14px; padding:10px; background:#fff;
+                   display:block"
+          />
+
+          <!-- Fallback: no image -->
+          <div
+            *ngIf="!selectedQRCode.qrCodeImage"
+            style="width:230px; height:230px; border:2px dashed #cbd5e1;
+                   border-radius:14px; display:flex; align-items:center;
+                   justify-content:center; flex-direction:column; gap:8px">
+            <i class="fas fa-qrcode" style="font-size:48px; color:#94a3b8"></i>
+            <p style="font-size:11px; color:#94a3b8; margin:0">QR image unavailable</p>
+            <p style="font-size:10px; color:#cbd5e1; margin:0;
+                      word-break:break-all; padding:0 12px; text-align:center">
+              {{ selectedQRCode.qrCodeData }}
+            </p>
+          </div>
+        </div>
+
+        <!-- ── COUNTDOWN TIMER ── -->
+        <div style="display:flex; align-items:center; gap:8px;
+                    background:#f8fafc; border:1px solid #e2e8f0;
+                    border-radius:10px; padding:10px 18px">
+          <i class="fas fa-clock"
+             [style.color]="qrSecondsLeft < 60 ? '#ef4444' : (qrSecondsLeft < 120 ? '#f59e0b' : '#16a34a')">
+          </i>
+          <span style="font-size:13px; font-weight:600"
+                [style.color]="qrSecondsLeft < 60 ? '#ef4444' : (qrSecondsLeft < 120 ? '#f59e0b' : '#374151')">
+            Expires in {{ formatCountdown(qrSecondsLeft) }}
+          </span>
+          <!-- Progress bar -->
+          <div style="width:80px; height:5px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-left:4px">
+            <div
+              [style.width.%]="(qrSecondsLeft / 300) * 100"
+              [style.background]="qrSecondsLeft < 60 ? '#ef4444' : (qrSecondsLeft < 120 ? '#f59e0b' : '#16a34a')"
+              style="height:100%; border-radius:4px; transition:width 1s linear">
+            </div>
+          </div>
+        </div>
+
+        <!-- How to use instructions -->
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0;
+                    border-radius:10px; padding:14px; text-align:left; width:100%">
+          <p style="font-size:12px; color:#16a34a; margin:0 0 6px 0; font-weight:700">
+            <i class="fas fa-mobile-alt"></i> How to use:
+          </p>
+          <ol style="font-size:12px; color:#15803d; margin:0; padding-left:18px; line-height:2">
+            <li>Open the <strong>Agribind</strong> mobile app</li>
+            <li>Tap the <strong>QR Code</strong> tab on the login screen</li>
+            <li>Tap <strong>Open Camera Scanner</strong></li>
+            <li>Point the camera at this QR code</li>
+          </ol>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="qr-modal-footer" style="display:flex; gap:10px; justify-content:flex-end; padding:16px 24px">
+      <button class="btn btn-secondary" (click)="closeQRModal()">
+        <i class="fas fa-times"></i> Close
+      </button>
+      <!-- Refresh button (always visible when QR is shown) -->
+      <button
+        *ngIf="selectedQRCode && !qrCodeLoading"
+        class="btn btn-outline"
+        (click)="currentQRMember && generateAccountAccessQR(currentQRMember)"
+        style="border:1px solid #16a34a; color:#16a34a">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <!-- Download button -->
+      <button
+        class="btn btn-primary"
+        (click)="downloadQRCode()"
+        *ngIf="selectedQRCode?.qrCodeImage && !qrCodeLoading"
+      >
+        <i class="fas fa-download"></i> Download PNG
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===== CREATE MANAGER MODAL ===== -->
+<div class="modal-overlay" *ngIf="showManagerModal">
+  <div class="qr-modal" style="max-width:560px">
+    <div class="qr-modal-header">
+      <h2><i class="fas fa-user-shield"></i> Create Cooperative Manager</h2>
+      <button class="close-btn" (click)="closeManagerModal()">✖</button>
+    </div>
+    <div class="qr-modal-body" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+      <div class="mgr-form-row">
+        <div class="mgr-form-col">
+          <label class="mgr-label">Full Name *</label>
+          <input class="mgr-input" [(ngModel)]="managerForm.name" placeholder="e.g. Jean Dupont" />
+        </div>
+        <div class="mgr-form-col">
+          <label class="mgr-label">Phone Number *</label>
+          <input class="mgr-input" [(ngModel)]="managerForm.phone" placeholder="+237 6XXXXXXXX" />
+        </div>
+      </div>
+      <div class="mgr-form-row">
+        <div class="mgr-form-col">
+          <label class="mgr-label">Email Address</label>
+          <input class="mgr-input" [(ngModel)]="managerForm.email" placeholder="manager@email.com" type="email" />
+        </div>
+        <div class="mgr-form-col">
+          <label class="mgr-label">Region *</label>
+          <select class="mgr-input" [(ngModel)]="managerForm.region">
+            <option value="">Select region...</option>
+            <option *ngFor="let r of regionOptions.slice(1)" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+      </div>
+      <p style="font-size:13px; color:#64748b; margin:0">
+        <i class="fas fa-info-circle"></i>
+        Login credentials will be generated and sent to the manager upon creation.
+      </p>
+    </div>
+    <div class="qr-modal-footer">
+      <button class="btn btn-secondary" (click)="closeManagerModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button class="btn btn-primary" (click)="submitCreateManager()" [disabled]="isSubmittingManager">
+        <i class="fas fa-plus"></i> {{ isSubmittingManager ? 'Creating...' : 'Create Manager' }}
+      </button>
+    </div>
+  </div>
+</div>

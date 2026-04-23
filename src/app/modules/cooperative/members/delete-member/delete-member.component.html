@@ -1,0 +1,28 @@
+<div class="modal-overlay" *ngIf="isModalOpen && member">
+  <div class="modal delete-modal">
+    <div class="modal-header">
+      <h2>Delete Member</h2>
+      <button class="close-btn" (click)="closeModal()">✖</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="delete-warning">
+        <div class="warning-icon">⚠️</div>
+        <h3>Are you sure you want to delete this member?</h3>
+        <p>This action cannot be undone. All member data including profile information, production records, and transaction history will be permanently deleted.</p>
+
+        <div class="member-to-delete">
+          <strong>{{ member.name }}</strong> ({{ member.id }})<br>
+          <span class="member-details">{{ member.type }} • {{ member.region }} • {{ member.primaryCrop }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-cancel" (click)="closeModal()">Cancel</button>
+      <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Deleting...' : 'Delete Member' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,233 @@
+<div class="modal-overlay" *ngIf="isModalOpen && member">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Member Details</h2>
+      <button class="close-btn" (click)="closeModal()">✖</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Loading Indicator -->
+      <div *ngIf="isLoading" class="loading-indicator">
+        <i class="fas fa-spinner fa-spin"></i> Loading member details...
+      </div>
+
+      <!-- Member Header -->
+      <div class="member-header" *ngIf="!isLoading">
+        <div class="member-avatar">
+          <span class="item-icon"><i class="fas fa-user"></i></span>
+        </div>
+        <div class="member-basic-info">
+          <h3 class="member-name">{{ member.name }}</h3>
+          <div class="member-id">AR Code: {{ member.id }}</div>
+          <div class="member-reg" *ngIf="member.registrationNumber">
+            Registration: {{ member.registrationNumber }}
+          </div>
+          <span class="status-badge" [class]="getStatusClass(member.status || '')">
+            {{ member.status }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Main Details Grid -->
+      <div class="details-grid" *ngIf="!isLoading && member">
+
+        <!-- Contact Information -->
+        <div class="detail-section">
+          <h4 class="section-title">📞 Contact Information</h4>
+          <div class="detail-item">
+            <span class="detail-label">Phone:</span>
+            <span class="detail-value">{{ member.phone }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ member.email || 'Not provided' }}</span>
+          </div>
+          <div class="detail-item full-width" *ngIf="member.address">
+            <span class="detail-label">Address:</span>
+            <span class="detail-value">{{ member.address }}</span>
+          </div>
+          <div class="detail-item" *ngIf="member.department">
+            <span class="detail-label">Department:</span>
+            <span class="detail-value">{{ member.department }}</span>
+          </div>
+          <div class="detail-item" *ngIf="member.district">
+            <span class="detail-label">District:</span>
+            <span class="detail-value">{{ member.district }}</span>
+          </div>
+          <div class="detail-item" *ngIf="member.village">
+            <span class="detail-label">Village:</span>
+            <span class="detail-value">{{ member.village }}</span>
+          </div>
+        </div>
+
+        <!-- Member Information -->
+        <div class="detail-section">
+          <h4 class="section-title">👤 Member Information</h4>
+          <div class="detail-item">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value">{{ member.type }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Region:</span>
+            <span class="detail-value">{{ member.region }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Join Date:</span>
+            <span class="detail-value">{{ member.joinDate || 'Not specified' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value status-value" [class]="getStatusClass(member.status)">
+              {{ member.status }}
+            </span>
+          </div>
+
+          <!-- ── Language Section ─────────────────────────────────────── -->
+          <div class="detail-item full-width">
+            <span class="detail-label">
+              <i class="fas fa-language" style="margin-right:4px;color:#3b82f6;"></i>
+              Preferred Languages:
+            </span>
+            <span class="detail-value">
+
+              <!-- Official language badge -->
+              <span *ngIf="member.preferredLanguage"
+                    style="display:inline-flex;align-items:center;gap:4px;
+                           background:#dbeafe;color:#1d4ed8;
+                           padding:2px 10px;border-radius:99px;
+                           font-size:12px;font-weight:600;margin-right:6px;">
+                🌐 {{ member.preferredLanguage }}
+              </span>
+
+              <!-- Native language badge (only shown if set) -->
+              <span *ngIf="member.nativeLanguage"
+                    style="display:inline-flex;align-items:center;gap:4px;
+                           background:#dcfce7;color:#15803d;
+                           padding:2px 10px;border-radius:99px;
+                           font-size:12px;font-weight:600;">
+                🗣️ {{ member.nativeLanguage }}
+              </span>
+
+              <!-- Fallback when neither is set -->
+              <span *ngIf="!member.preferredLanguage && !member.nativeLanguage"
+                    style="color:#94a3b8;">
+                Not specified
+              </span>
+
+            </span>
+          </div>
+          <!-- /Language Section -->
+
+        </div>
+
+        <!-- Farming Information -->
+        <div class="detail-section" *ngIf="member.type === 'Farmer'">
+          <h4 class="section-title">🌱 Farming Information</h4>
+          <div class="detail-item">
+            <span class="detail-label">Agricultural Type:</span>
+            <span class="detail-value">{{ member.agriculturalType || 'Not specified' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Primary Crop:</span>
+            <span class="detail-value">{{ member.primaryCrop || 'Not specified' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="member.cropTypes && member.cropTypes.length > 0">
+            <span class="detail-label">Crop Types:</span>
+            <span class="detail-value">{{ member.cropTypes.join(', ') }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Farm Size (Land Area):</span>
+            <span class="detail-value">
+              {{ member.farmSize || (member.landArea ? member.landArea + ' ha' : 'Not specified') }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Farm Location (GPS):</span>
+            <span class="detail-value">
+              {{ member.farmLocation || member.gpsCoordinates || 'Not specified' }}
+            </span>
+          </div>
+          <div class="detail-item" *ngIf="member.gpsCoordinates">
+            <span class="detail-label">GPS Coordinates:</span>
+            <span class="detail-value"><code>{{ member.gpsCoordinates }}</code></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Last Production:</span>
+            <span class="detail-value">{{ member.lastProduction || 'Not recorded' }}</span>
+          </div>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="detail-section">
+          <h4 class="section-title">💰 Financial Information</h4>
+          <div class="detail-item">
+            <span class="detail-label">Credit Status:</span>
+            <span class="detail-value credit-status"
+                  [class]="getCreditStatusClass(member.creditStatus)">
+              {{ member.creditStatus || 'Not specified' }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Stats Section -->
+      <div class="quick-stats" *ngIf="!isLoading && hasAdditionalInfo()">
+        <h4 class="section-title">📊 Quick Overview</h4>
+        <div class="stats-grid">
+          <div class="stat-item" *ngIf="member.farmSize || member.landArea">
+            <div class="stat-icon">🌾</div>
+            <div class="stat-info">
+              <div class="stat-value">
+                {{ member.farmSize || (member.landArea ? member.landArea + ' ha' : 'N/A') }}
+              </div>
+              <div class="stat-label">Farm Size</div>
+            </div>
+          </div>
+
+          <div class="stat-item" *ngIf="member.farmLocation || member.gpsCoordinates">
+            <div class="stat-icon">📍</div>
+            <div class="stat-info">
+              <div class="stat-value">
+                {{ member.farmLocation || member.gpsCoordinates || 'N/A' }}
+              </div>
+              <div class="stat-label">Farm Location</div>
+            </div>
+          </div>
+
+          <div class="stat-item" *ngIf="member.registrationNumber">
+            <div class="stat-icon">🆔</div>
+            <div class="stat-info">
+              <div class="stat-value">{{ member.registrationNumber }}</div>
+              <div class="stat-label">Registration Number</div>
+            </div>
+          </div>
+
+          <div class="stat-item" *ngIf="member.lastProduction">
+            <div class="stat-icon">📦</div>
+            <div class="stat-info">
+              <div class="stat-value">{{ member.lastProduction }}</div>
+              <div class="stat-label">Last Production</div>
+            </div>
+          </div>
+
+          <!-- ✅ Language summary stat card (shown when at least one language is set) -->
+          <div class="stat-item" *ngIf="member.preferredLanguage">
+            <div class="stat-icon">🗣️</div>
+            <div class="stat-info">
+              <div class="stat-value">{{ languageSummary }}</div>
+              <div class="stat-label">Languages</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="action-buttons" *ngIf="!isLoading && member">
+        <button class="btn btn-secondary" (click)="closeModal()">Close</button>
+        <button class="btn btn-primary">View Member</button>
+        <button class="btn btn-info" *ngIf="member.creditStatus">View Credit History</button>
+      </div>
+    </div>
+  </div>
+</div>

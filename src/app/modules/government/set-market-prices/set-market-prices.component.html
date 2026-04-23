@@ -1,0 +1,194 @@
+<div class="price-control-wrapper">
+
+  <!-- ===== HEADER ===== -->
+  <div class="section-header">
+    <div class="header-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"></line>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+      </svg>
+    </div>
+    <div>
+      <h2 class="section-title">Set Market Prices</h2>
+      <p class="section-subtitle">Define official commodity prices for Cameroon's agricultural market</p>
+    </div>
+  </div>
+
+  <!-- ===== PRICE SETTING PANEL ===== -->
+  <div class="panel price-setting-panel">
+
+    <!-- Commodity Selection -->
+    <div class="panel-block">
+      <label class="block-label">Select Commodity</label>
+      <div class="commodity-grid">
+        <button
+          *ngFor="let c of commodities"
+          class="commodity-card"
+          [class.selected]="selectedCommodity === c.name"
+          (click)="selectCommodity(c.name)">
+          <span class="commodity-icon">{{ c.icon }}</span>
+          <span class="commodity-name">{{ c.name }}</span>
+          <span class="commodity-hint">{{ c.currentPrice | number }} XAF/kg</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Price Input -->
+    <div class="panel-block">
+      <label class="block-label">Price (XAF / kg)</label>
+
+      <div class="price-input-wrap">
+        <span class="currency-tag">XAF</span>
+        <input
+          type="number"
+          class="price-input"
+          placeholder="0"
+          [(ngModel)]="priceInput"
+          name="priceInput" />
+        <span class="unit-tag">/kg</span>
+      </div>
+
+      <div class="date-row">
+        <div class="date-field">
+          <label class="sub-label">Effective Date</label>
+          <input type="date" class="date-input" [(ngModel)]="effectiveDate" name="effectiveDate" />
+        </div>
+        <div class="date-field">
+          <label class="sub-label">Expiry Date</label>
+          <input type="date" class="date-input" [(ngModel)]="expirationDate" name="expirationDate" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Regional Settings -->
+    <div class="panel-block">
+      <label class="block-label">Regional Application</label>
+
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="allRegions" name="allRegions" />
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          Apply to all regions
+        </span>
+      </div>
+
+      <div class="region-select-wrap" *ngIf="!allRegions">
+        <label class="sub-label">Select Regions</label>
+        <div class="region-chips">
+          <button
+            *ngFor="let region of regions"
+            class="region-chip"
+            [class.active]="isRegionSelected(region)"
+            (click)="toggleRegion(region)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            {{ region }}
+          </button>
+        </div>
+      </div>
+
+      <button
+        class="btn-set-price"
+        [disabled]="!selectedCommodity || !priceInput"
+        (click)="handlePriceUpdate()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+        Set Price
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== PRICE BOARD ===== -->
+  <div class="panel price-board-panel">
+    <div class="board-header">
+      <h3 class="board-title">Current Price Board</h3>
+      <button class="btn-broadcast">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        Broadcast All Active
+      </button>
+    </div>
+
+    <div class="table-scroll">
+      <table class="price-table">
+        <thead>
+          <tr>
+            <th>Commodity</th>
+            <th>Market Price</th>
+            <th>Your Price</th>
+            <th>Impact</th>
+            <th>Status</th>
+            <th>Effective Period</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of priceData" class="table-row">
+            <td>
+              <div class="commodity-cell">
+                <span class="row-icon">{{ item.icon }}</span>
+                <span class="row-name">{{ item.commodity }}</span>
+              </div>
+            </td>
+            <td class="price-cell">{{ item.currentPrice | number }} XAF/kg</td>
+            <td>
+              <span *ngIf="item.yourPrice" class="your-price">{{ item.yourPrice | number }} XAF/kg</span>
+              <span *ngIf="!item.yourPrice" class="not-set">Not set</span>
+            </td>
+            <td>
+              <div *ngIf="item.yourPrice" class="impact-cell"
+                [ngClass]="getPriceChangeClass(item)">
+                <span class="impact-arrow">{{ getPriceChange(item) > 0 ? '↑' : getPriceChange(item) < 0 ? '↓' : '→' }}</span>
+                <span>{{ getPriceChange(item) > 0 ? '+' : '' }}{{ getPriceChange(item) | number:'1.1-1' }}%</span>
+              </div>
+              <span *ngIf="!item.yourPrice" class="not-set">—</span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+                {{ item.status }}
+              </span>
+            </td>
+            <td class="period-cell">
+              <span *ngIf="item.effectiveDate && item.expirationDate">
+                {{ item.effectiveDate | date:'MMM dd' }} — {{ item.expirationDate | date:'MMM dd, yyyy' }}
+              </span>
+              <span *ngIf="!item.effectiveDate" class="not-set">Not scheduled</span>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button
+                  *ngIf="item.status === 'Draft'"
+                  class="btn-publish"
+                  (click)="publishPrice(item.commodity)">
+                  Publish
+                </button>
+                <button class="btn-edit" (click)="editPrice(item)">Edit</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  
+
+</div>

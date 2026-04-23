@@ -1,0 +1,550 @@
+<div class="main-content">
+  <div class="page-content">
+
+    <!-- ── Page Header ─────────────────────────────────────────── -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Cooperative Management</h1>
+        <p class="page-description">Create and manage cooperatives and their administrators</p>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar" style="background:#2d3a8c">
+          <span>{{ currentUser?.username?.substring(0,2)?.toUpperCase() || 'GA' }}</span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ currentUser?.username || 'Government Admin' }}</span>
+          <span class="user-role">Agricultural Officer</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Stats Cards ──────────────────────────────────────────── -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ totalCooperatives }}</h3>
+          <p class="stat-label">Total Cooperatives</p>
+          <p class="stat-trend positive">Registered cooperatives</p>
+        </div>
+        <div class="stat-icon blue">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ activeCooperatives }}</h3>
+          <p class="stat-label">Active Cooperatives</p>
+          <p class="stat-trend positive">Currently operational</p>
+        </div>
+        <div class="stat-icon green">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ totalAdmins }}</h3>
+          <p class="stat-label">Cooperative Admins</p>
+          <p class="stat-trend positive">Assigned administrators</p>
+        </div>
+        <div class="stat-icon amber">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ totalRegions }}</h3>
+          <p class="stat-label">Regions Covered</p>
+          <p class="stat-trend positive">Geographic coverage</p>
+        </div>
+        <div class="stat-icon indigo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Alerts ───────────────────────────────────────────────── -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      {{ successMessage }}
+    </div>
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ errorMessage }}
+    </div>
+
+    <!-- ── Tab Bar ──────────────────────────────────────────────── -->
+    <div class="tab-bar">
+      <button class="tab-btn" [class.active]="activeTab === 'cooperatives'" (click)="switchTab('cooperatives')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Cooperative Admins
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'admins'" (click)="switchTab('admins')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Cooperatives
+      </button>
+    </div>
+
+    <!-- ── Action Bar ───────────────────────────────────────────── -->
+    <div class="action-bar">
+      <div class="search-wrapper">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text"
+          [placeholder]="activeTab === 'cooperatives' ? 'Search cooperatives...' : 'Search admins...'"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()" />
+      </div>
+      <div class="button-group">
+        <button class="btn-primary" (click)="openCoopModal()" *ngIf="activeTab === 'cooperatives'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Cooperative
+        </button>
+        <button class="btn-primary" (click)="openAdminModal()" *ngIf="activeTab === 'admins'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Cooperative Admin
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Filters (Cooperatives tab) ──────────────────────────── -->
+    <div class="filters" *ngIf="activeTab === 'cooperatives'">
+      <div class="filter-group">
+        <label>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+          Status
+        </label>
+        <select [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+          <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+          Region
+        </label>
+        <select [(ngModel)]="selectedRegion" (change)="onFilterChange()">
+          <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── Loading Spinner ──────────────────────────────────────── -->
+    <div *ngIf="isLoading" class="spinner"></div>
+
+    <!-- ── COOPERATIVES TABLE ───────────────────────────────────── -->
+    <div class="table-container" *ngIf="activeTab === 'cooperatives' && !isLoading">
+      <table>
+        <thead>
+          <tr>
+            <th>Cooperative Name</th>
+            <th>Reg. Number</th>
+            <th>Region</th>
+            <th>Type</th>
+            <th>Contact Person</th>
+            <th>Members</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let coop of filteredCooperatives">
+            <td>
+              <div class="name-cell">
+                <div class="coop-avatar">{{ coop.name.charAt(0) }}</div>
+                <div>
+                  <span class="coop-name">{{ coop.name }}</span>
+                  <span class="coop-year" *ngIf="coop.establishmentYear">Est. {{ coop.establishmentYear }}</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="reg-badge">{{ coop.registrationNumber || 'N/A' }}</span></td>
+            <td>
+              <div class="location-cell">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#328048" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+                {{ coop.region }}
+              </div>
+            </td>
+            <td><span class="type-badge">{{ getCoopTypeLabel(coop.type) }}</span></td>
+            <td>{{ coop.contactPerson || 'N/A' }}</td>
+            <td>
+              <span class="members-badge">
+                {{ coop.activeMemberCount }}/{{ coop.totalMembers }}
+                <span class="members-label"> active</span>
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(coop.status)">
+                <span class="status-dot"></span> {{ coop.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button class="view-btn" title="View details" (click)="openViewModal(coop)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                <button class="edit-btn admin-assign-btn" (click)="openAdminModal(coop)" title="Assign Admin">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredCooperatives.length === 0">
+            <td colspan="8" class="no-data">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              <p>No cooperatives found. Click "New Cooperative" to add one.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── ADMINS TABLE ─────────────────────────────────────────── -->
+    <div class="table-container" *ngIf="activeTab === 'admins' && !isLoading">
+      <table>
+        <thead>
+          <tr>
+            <th>Admin Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Cooperative</th>
+            <th>Region</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let admin of coopAdmins">
+            <td>
+              <div class="name-cell">
+                <div class="coop-avatar" style="background:#2d3a8c">{{ admin.name.charAt(0) }}</div>
+                <span>{{ admin.name }}</span>
+              </div>
+            </td>
+            <td>{{ admin.email }}</td>
+            <td>{{ admin.phoneNumber }}</td>
+            <td><span class="type-badge">{{ admin.cooperativeName || 'Unassigned' }}</span></td>
+            <td>{{ admin.region || 'N/A' }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(admin.status)">
+                <span class="status-dot"></span> {{ admin.status }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="coopAdmins.length === 0">
+            <td colspan="6" class="no-data">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <p>No admins found. Click "New Cooperative Admin" to add one.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODALS (outside .main-content so they overlay everything) -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<!-- CREATE COOPERATIVE MODAL -->
+<div class="modal-overlay" *ngIf="showCoopModal" (click)="closeCoopModal()">
+  <div class="modal-card modal-card--coop" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header__icon-wrap modal-header__icon-wrap--blue">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div class="modal-header__text">
+        <h2>Create Cooperative</h2>
+        <p>Register a new agricultural cooperative</p>
+      </div>
+      <button class="modal-close-btn" (click)="closeCoopModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Cooperative Name <span class="required">*</span>
+          </label>
+          <input class="form-input" [(ngModel)]="coopForm.name" placeholder="e.g. Coop Agricole du Centre" />
+        </div>
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+            Region <span class="required">*</span>
+          </label>
+          <select class="form-input" [(ngModel)]="coopForm.region">
+            <option value="">Select region...</option>
+            <option *ngFor="let r of regions.slice(1)" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Cooperative Type
+          </label>
+          <select class="form-input" [(ngModel)]="coopForm.cooperativeType">
+            <option *ngFor="let t of cooperativeTypes" [value]="t">{{ getCoopTypeLabel(t) }}</option>
+          </select>
+        </div>
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            Registration Number
+          </label>
+          <input class="form-input" [(ngModel)]="coopForm.legalRegistrationNumber" placeholder="e.g. CM-2024-001" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Contact Person
+          </label>
+          <input class="form-input" [(ngModel)]="coopForm.contactPerson" placeholder="Contact person name" />
+        </div>
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/></svg>
+            Phone Number <span class="required">*</span>
+          </label>
+          <input class="form-input" [(ngModel)]="coopForm.phoneNumber" placeholder="+237 6XXXXXXXX" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+            Establishment Year
+          </label>
+          <input class="form-input" type="number" [(ngModel)]="coopForm.establishmentYear" [min]="1990" [max]="2026" placeholder="e.g. 2010" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeCoopModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Cancel
+      </button>
+      <button class="btn btn-primary" (click)="submitCreateCooperative()" [disabled]="isSubmittingCoop">
+        <svg *ngIf="!isSubmittingCoop" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span class="btn-spinner" *ngIf="isSubmittingCoop"></span>
+        {{ isSubmittingCoop ? 'Creating...' : 'Create Cooperative' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE ADMIN MODAL -->
+<div class="modal-overlay" *ngIf="showAdminModal" (click)="closeAdminModal()">
+  <div class="modal-card modal-card--admin" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header--green">
+      <div class="modal-header__icon-wrap modal-header__icon-wrap--green">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="modal-header__text">
+        <h2>Create Cooperative Admin</h2>
+        <p>Add a new administrator account</p>
+      </div>
+      <button class="modal-close-btn" (click)="closeAdminModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Full Name <span class="required">*</span>
+          </label>
+          <input class="form-input" [(ngModel)]="adminForm.name" placeholder="Admin full name" />
+        </div>
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/></svg>
+            Phone Number <span class="required">*</span>
+          </label>
+          <input class="form-input" [(ngModel)]="adminForm.phoneNumber" placeholder="+237 6XXXXXXXX" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Email Address
+          </label>
+          <input class="form-input" [(ngModel)]="adminForm.email" placeholder="admin@cooperative.cm" type="email" />
+        </div>
+        <div class="form-col">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+            Region
+          </label>
+          <select class="form-input" [(ngModel)]="adminForm.region">
+            <option value="">Select region...</option>
+            <option *ngFor="let r of regions.slice(1)" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col form-col--full">
+          <label class="form-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Assign to Cooperative <span class="required">*</span>
+          </label>
+          <select class="form-input" [(ngModel)]="adminForm.cooperativeId">
+            <option value="">Select cooperative...</option>
+            <option *ngFor="let c of cooperatives" [value]="c.id">{{ c.name }} ({{ c.region }})</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-hint-box">
+        <div class="form-hint-box__icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </div>
+        <p>Login credentials will be automatically generated and sent to the administrator's email address.</p>
+      </div>
+    </div>
+    <div class="modal-footer modal-footer--green">
+      <button class="btn btn-secondary" (click)="closeAdminModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Cancel
+      </button>
+      <button class="btn btn-primary btn-primary--green" (click)="submitCreateAdmin()" [disabled]="isSubmittingAdmin">
+        <span class="btn-spinner" *ngIf="isSubmittingAdmin"></span>
+        <svg *ngIf="!isSubmittingAdmin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        {{ isSubmittingAdmin ? 'Creating...' : 'Create Admin' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW COOPERATIVE MODAL -->
+<div class="modal-overlay" *ngIf="showViewModal" (click)="closeViewModal()">
+  <div class="modal-card modal-card--view" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header--view">
+      <div class="modal-header__icon-wrap modal-header__icon-wrap--blue">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div class="modal-header__text">
+        <h2>Cooperative Details</h2>
+        <p *ngIf="selectedCooperative">{{ selectedCooperative.name }}</p>
+      </div>
+      <button class="modal-close-btn" (click)="closeViewModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="selectedCooperative">
+      <div class="view-hero">
+        <div class="view-hero__avatar">{{ selectedCooperative.name.charAt(0) }}</div>
+        <div class="view-hero__info">
+          <h3>{{ selectedCooperative.name }}</h3>
+          <span class="status-badge" [ngClass]="getStatusClass(selectedCooperative.status)">
+            <span class="status-dot"></span> {{ selectedCooperative.status }}
+          </span>
+        </div>
+        <span class="type-badge view-hero__type">{{ getCoopTypeLabel(selectedCooperative.type) }}</span>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <div class="detail-card__icon detail-card__icon--blue">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          </div>
+          <div>
+            <span class="detail-card__label">Reg. Number</span>
+            <span class="detail-card__value">{{ selectedCooperative.registrationNumber || 'N/A' }}</span>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card__icon detail-card__icon--green">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+          </div>
+          <div>
+            <span class="detail-card__label">Region</span>
+            <span class="detail-card__value">{{ selectedCooperative.region }}</span>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card__icon detail-card__icon--blue">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <span class="detail-card__label">Contact Person</span>
+            <span class="detail-card__value">{{ selectedCooperative.contactPerson || 'N/A' }}</span>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card__icon detail-card__icon--green">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/></svg>
+          </div>
+          <div>
+            <span class="detail-card__label">Phone Number</span>
+            <span class="detail-card__value">{{ selectedCooperative.phoneNumber || 'N/A' }}</span>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card__icon detail-card__icon--amber">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+          </div>
+          <div>
+            <span class="detail-card__label">Est. Year</span>
+            <span class="detail-card__value">{{ selectedCooperative.establishmentYear || 'N/A' }}</span>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card__icon detail-card__icon--blue">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div>
+            <span class="detail-card__label">Members</span>
+            <span class="detail-card__value detail-card__value--members">
+              <strong>{{ selectedCooperative.activeMemberCount }}</strong>
+              <span>/ {{ selectedCooperative.totalMembers }} active</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="members-progress">
+        <div class="members-progress__label">
+          <span>Member Activity</span>
+          <span>{{ selectedCooperative.totalMembers > 0 ? ((selectedCooperative.activeMemberCount / selectedCooperative.totalMembers) * 100 | number:'1.0-0') : 0 }}%</span>
+        </div>
+        <div class="members-progress__bar">
+          <div class="members-progress__fill"
+            [style.width.%]="selectedCooperative.totalMembers > 0 ? (selectedCooperative.activeMemberCount / selectedCooperative.totalMembers) * 100 : 0">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer modal-footer--view">
+      <button class="btn btn-secondary" (click)="closeViewModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Close
+      </button>
+      <button class="btn btn-primary" (click)="closeViewModal(); openAdminModal(selectedCooperative!)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Assign Admin
+      </button>
+    </div>
+  </div>
+</div>

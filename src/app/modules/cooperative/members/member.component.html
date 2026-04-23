@@ -1,0 +1,9 @@
+<div>
+  <h2>Members Component</h2>
+  <button (click)="openAddMemberModal()">Add Member</button>
+
+  <app-member-form
+    (memberAdded)="onMemberAdded($event)"
+    (modalClosed)="onModalClosed()">
+  </app-member-form>
+</div>

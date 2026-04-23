@@ -1,0 +1,393 @@
+<!-- src/app/modules/cooperative/members/member-form/member-form.component.html -->
+<!-- ✅ COMPLETE VERSION WITH MANUAL GPS INPUT + DUAL LANGUAGE SELECTION -->
+
+<div class="modal-overlay" *ngIf="isModalOpen">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add New Member</h2>
+      <button class="close-btn" (click)="closeModal()">✖</button>
+    </div>
+
+    <form [formGroup]="memberForm" (ngSubmit)="onSubmit()">
+      <div class="modal-body">
+
+        <!-- Member Type Selection -->
+        <div class="form-group" *ngIf="canAddCooperative()">
+          <label>Member Type <span class="required">*</span></label>
+          <div class="type-selector">
+            <button type="button"
+                    class="type-btn"
+                    [class.active]="selectedMemberType === 'FARMER'"
+                    (click)="memberForm.patchValue({type: 'FARMER'})">
+              <i class="fas fa-user"></i> Farmer
+            </button>
+            <button type="button"
+                    class="type-btn"
+                    [class.active]="selectedMemberType === 'COOPERATIVE'"
+                    (click)="memberForm.patchValue({type: 'COOPERATIVE'})">
+              <i class="fas fa-users"></i> Cooperative
+            </button>
+          </div>
+        </div>
+
+        <!-- Common Fields -->
+        <div class="form-group">
+          <label>Full Name <span class="required">*</span></label>
+          <input type="text"
+                 formControlName="name"
+                 placeholder="Enter full name"
+                 [class.error]="isFieldInvalid('name')">
+          <small *ngIf="isFieldInvalid('name')" class="error-message">
+            <span *ngIf="memberForm.get('name')?.errors?.['required']">Name is required</span>
+            <span *ngIf="memberForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</span>
+          </small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone Number <span class="required">*</span></label>
+            <input type="tel"
+                   formControlName="phoneNumber"
+                   placeholder="+237 6XXXXXXXX"
+                   [class.error]="isFieldInvalid('phoneNumber')">
+            <small *ngIf="isFieldInvalid('phoneNumber')" class="error-message">
+              <span *ngIf="memberForm.get('phoneNumber')?.errors?.['required']">Phone is required</span>
+              <span *ngIf="memberForm.get('phoneNumber')?.errors?.['pattern']">Format: +237 6XXXXXXXX</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email"
+                   formControlName="email"
+                   placeholder="email@example.com"
+                   [class.error]="isFieldInvalid('email')">
+            <small *ngIf="isFieldInvalid('email')" class="error-message">
+              <span *ngIf="memberForm.get('email')?.errors?.['email']">Invalid email format</span>
+            </small>
+          </div>
+        </div>
+
+        <!-- FARMER'S RESIDENTIAL ADDRESS SECTION -->
+        <div class="address-section">
+          <h3 class="section-title">
+            <i class="fas fa-home"></i> Residential Address
+          </h3>
+          <p class="section-description">
+            This is where you live (may be different from your farm location).
+          </p>
+
+          <div class="form-group">
+            <label>Region <span class="required">*</span></label>
+            <select formControlName="region" [class.error]="isFieldInvalid('region')">
+              <option value="">Select region</option>
+              <option *ngFor="let region of regionOptions" [value]="region">{{ region }}</option>
+            </select>
+            <small *ngIf="isFieldInvalid('region')" class="error-message">Region is required</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Department</label>
+              <input type="text"
+                     formControlName="department"
+                     placeholder="Enter department">
+            </div>
+            <div class="form-group">
+              <label>District</label>
+              <input type="text"
+                     formControlName="district"
+                     placeholder="Enter district">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Village/City</label>
+            <input type="text"
+                   formControlName="village"
+                   placeholder="Enter village or city">
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             PREFERRED LANGUAGES — TWO SECTIONS
+             ═══════════════════════════════════════════════════════════════ -->
+        <div class="form-group">
+
+          <label>Preferred Languages <span class="required">*</span></label>
+
+          <!-- ── SECTION 1 : Official Language (French / English) ──────── -->
+          <div class="language-section"
+               style="border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; margin-bottom:12px;">
+
+            <p class="language-section-label"
+               style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;
+                      letter-spacing:.05em; margin:0 0 10px 0;">
+              <i class="fas fa-globe" style="color:#3b82f6; margin-right:6px;"></i>
+              Official Language <span class="required">*</span>
+            </p>
+
+            <div class="type-selector" style="gap:10px;">
+              <button type="button"
+                      class="type-btn"
+                      [class.active]="memberForm.get('preferredLanguage')?.value === 'French'"
+                      (click)="memberForm.patchValue({preferredLanguage: 'French'})"
+                      style="flex:1; justify-content:center;">
+                🇫🇷 French
+              </button>
+              <button type="button"
+                      class="type-btn"
+                      [class.active]="memberForm.get('preferredLanguage')?.value === 'English'"
+                      (click)="memberForm.patchValue({preferredLanguage: 'English'})"
+                      style="flex:1; justify-content:center;">
+                🇬🇧 English
+              </button>
+            </div>
+
+            <small *ngIf="isFieldInvalid('preferredLanguage')" class="error-message"
+                   style="margin-top:6px; display:block;">
+              Please select French or English
+            </small>
+          </div>
+
+          <!-- ── SECTION 2 : Native / Local Language ───────────────────── -->
+          <div class="language-section"
+               style="border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px;">
+
+            <p class="language-section-label"
+               style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;
+                      letter-spacing:.05em; margin:0 0 4px 0;">
+              <i class="fas fa-comments" style="color:#16a34a; margin-right:6px;"></i>
+              Native / Local Language
+              <span style="font-weight:400; text-transform:none; color:#94a3b8; margin-left:6px;">
+                (optional)
+              </span>
+            </p>
+
+            <p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0;">
+              Select one — tap again to deselect
+            </p>
+
+            <div class="crop-selector" style="gap:8px; flex-wrap:wrap;">
+              <button type="button"
+                      *ngFor="let lang of nativeLanguageOptions"
+                      class="crop-btn"
+                      [class.selected]="isNativeLanguageSelected(lang)"
+                      (click)="selectNativeLanguage(lang)">
+                {{ lang }}
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Summary badge when both languages are chosen ─────────── -->
+          <div *ngIf="languageSummary"
+               style="margin-top:10px; display:flex; align-items:center; gap:8px;
+                      padding:10px 14px; background:#f0fdf4; border:1px solid #bbf7d0;
+                      border-radius:8px;">
+            <i class="fas fa-check-circle" style="color:#16a34a; font-size:15px; flex-shrink:0;"></i>
+            <span style="font-size:13px; color:#15803d;">
+              Selected languages:&nbsp;<strong>{{ languageSummary }}</strong>
+            </span>
+          </div>
+
+        </div>
+        <!-- /Preferred Languages -->
+
+        <!-- FARMER-SPECIFIC FIELDS -->
+        <div *ngIf="selectedMemberType === 'FARMER'" class="type-specific-section">
+          <h3 class="section-title">Farmer Details</h3>
+
+          <div class="form-group">
+            <label>Agricultural Type <span class="required">*</span></label>
+            <select formControlName="agriculturalType" [class.error]="isFieldInvalid('agriculturalType')">
+              <option value="">Select type</option>
+              <option *ngFor="let type of agriculturalTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+            <small *ngIf="isFieldInvalid('agriculturalType')" class="error-message">
+              Agricultural type is required
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Crops Grown</label>
+            <div class="crop-selector">
+              <button type="button"
+                      *ngFor="let crop of cropOptions"
+                      class="crop-btn"
+                      [class.selected]="isCropSelected(crop)"
+                      (click)="toggleCrop(crop)">
+                {{ crop }}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Land Area (hectares) <span class="required">*</span></label>
+            <input type="number"
+                   formControlName="landArea"
+                   placeholder="e.g., 5.5"
+                   step="0.1"
+                   min="0.1"
+                   [class.error]="isFieldInvalid('landArea')">
+            <small *ngIf="isFieldInvalid('landArea')" class="error-message">
+              <span *ngIf="memberForm.get('landArea')?.errors?.['required']">Land area is required</span>
+              <span *ngIf="memberForm.get('landArea')?.errors?.['min']">Must be at least 0.1 hectares</span>
+            </small>
+          </div>
+
+          <!-- FARM LOCATION SECTION -->
+          <div class="farm-location-section">
+            <h3 class="section-title">
+              <i class="fas fa-tractor"></i> Farm Location
+            </h3>
+            <p class="section-description">
+              Enter your farm's GPS coordinates. This is where your farm is located.
+            </p>
+
+            <!-- Manual GPS Coordinates Input (PRIMARY METHOD) -->
+            <div class="form-group">
+              <label>Farm GPS Coordinates <span class="required">*</span></label>
+              <input
+                type="text"
+                formControlName="farmGpsCoordinates"
+                placeholder="e.g., 5.9631, 10.1591 (latitude, longitude)"
+                class="form-input"
+                [class.error]="isFieldInvalid('farmGpsCoordinates')">
+              <small class="help-text">
+                Enter GPS coordinates in format: latitude, longitude (e.g., 5.9631, 10.1591)
+              </small>
+              <small *ngIf="isFieldInvalid('farmGpsCoordinates')" class="error-message">
+                <span *ngIf="memberForm.get('farmGpsCoordinates')?.errors?.['required']">Farm GPS coordinates are required</span>
+                <span *ngIf="memberForm.get('farmGpsCoordinates')?.errors?.['invalidFormat']">Invalid format. Use: latitude, longitude</span>
+                <span *ngIf="memberForm.get('farmGpsCoordinates')?.errors?.['invalidNumbers']">Coordinates must be valid numbers</span>
+                <span *ngIf="memberForm.get('farmGpsCoordinates')?.errors?.['outOfRange']">Latitude must be -90 to 90, longitude -180 to 180</span>
+              </small>
+            </div>
+
+            <!-- Farm Location Search (Optional) -->
+            <div class="form-group">
+              <label>Search Farm Location (Optional)</label>
+              <div class="location-search-container">
+                <input
+                  id="farm-location-search"
+                  formControlName="farmLocationSearch"
+                  placeholder="Enter farm address, village, or area name..."
+                  type="text"
+                  class="location-search-input">
+                <i class="fas fa-search search-icon"></i>
+              </div>
+              <small class="help-text">
+                Start typing your farm location and select from suggestions (if map is available).
+              </small>
+            </div>
+
+            <!-- Interactive Map for Farm Location (Optional) -->
+            <div class="form-group">
+              <label>Farm Location Map (Optional)</label>
+              <div class="map-instructions">
+                <div class="instruction-item">
+                  <i class="fas fa-info-circle"></i>
+                  <span>Map is optional - you can manually enter GPS coordinates above</span>
+                </div>
+                <div class="instruction-item" *ngIf="mapInitialized">
+                  <i class="fas fa-map-pin"></i>
+                  <span>Click on the map to set location</span>
+                </div>
+              </div>
+
+              <div id="farm-map-container" class="map-container" *ngIf="mapInitialized">
+                <!-- Map will load here if Google Maps is available -->
+              </div>
+
+              <div class="map-loading" *ngIf="!mapInitialized">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Map is loading... You can enter GPS coordinates manually above.</span>
+              </div>
+
+              <!-- Farm Coordinates Display -->
+              <div class="coordinates-container" *ngIf="memberForm.get('farmGpsCoordinates')?.value">
+                <div class="coordinates-display success">
+                  <i class="fas fa-check-circle"></i>
+                  <div class="coordinates-info">
+                    <strong>Farm Location Set</strong>
+                    <span>Coordinates: {{ memberForm.get('farmGpsCoordinates')?.value }}</span>
+                    <span *ngIf="memberForm.get('farmFullAddress')?.value" class="farm-address">
+                      Address: {{ memberForm.get('farmFullAddress')?.value }}
+                    </span>
+                  </div>
+                  <button type="button" class="btn-clear" (click)="clearFarmLocation()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COOPERATIVE-SPECIFIC FIELDS -->
+        <div *ngIf="selectedMemberType === 'COOPERATIVE'" class="type-specific-section">
+          <h3 class="section-title">Cooperative Details</h3>
+
+          <div class="form-group">
+            <label>Cooperative Type <span class="required">*</span></label>
+            <select formControlName="cooperativeType" [class.error]="isFieldInvalid('cooperativeType')">
+              <option value="">Select type</option>
+              <option *ngFor="let type of cooperativeTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+            <small *ngIf="isFieldInvalid('cooperativeType')" class="error-message">
+              Cooperative type is required
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Legal Registration Number <span class="required">*</span></label>
+            <input type="text"
+                   formControlName="legalRegistrationNumber"
+                   placeholder="e.g., COOP-2025-001"
+                   [class.error]="isFieldInvalid('legalRegistrationNumber')">
+            <small *ngIf="isFieldInvalid('legalRegistrationNumber')" class="error-message">
+              Registration number is required
+            </small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Establishment Year</label>
+              <input type="number"
+                     formControlName="establishmentYear"
+                     placeholder="e.g., 2020"
+                     min="1900"
+                     [max]="2025">
+            </div>
+
+            <div class="form-group">
+              <label>Contact Person <span class="required">*</span></label>
+              <input type="text"
+                     formControlName="contactPerson"
+                     placeholder="Primary contact name"
+                     [class.error]="isFieldInvalid('contactPerson')">
+              <small *ngIf="isFieldInvalid('contactPerson')" class="error-message">
+                Contact person is required
+              </small>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+        <button type="submit"
+                class="btn-submit"
+                [disabled]="isSubmitting || !memberForm.valid">
+          <span *ngIf="!isSubmitting">
+            <i class="fas fa-plus"></i> Add {{ selectedMemberType === 'FARMER' ? 'Farmer' : 'Cooperative' }}
+          </span>
+          <span *ngIf="isSubmitting">
+            <i class="fas fa-spinner fa-spin"></i> Adding...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

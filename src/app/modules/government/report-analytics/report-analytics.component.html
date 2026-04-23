@@ -1,0 +1,571 @@
+<div class="ra-container" [class.animated-in]="animatedIn">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       REPORT CONTROLS
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="ra-card controls-card stagger-1">
+    <div class="controls-row">
+      <div class="controls-left">
+
+        <!-- Report type -->
+        <div class="ctrl-group">
+          <select class="ra-select" [(ngModel)]="reportType" (ngModelChange)="onFilterChange()">
+            <option *ngFor="let t of reportTypes" [value]="t">{{ t }}</option>
+          </select>
+          <span class="select-chevron">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+
+        <!-- Region -->
+        <div class="ctrl-group">
+          <select class="ra-select" [(ngModel)]="selectedRegion" (ngModelChange)="onFilterChange()">
+            <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
+          </select>
+          <span class="select-chevron">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+
+        <!-- Date range picker -->
+        <div class="date-picker-wrap" style="position:relative">
+          <button class="date-btn" (click)="toggleCalendar($event)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>{{ dateLabel }}</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <!-- Calendar dropdown -->
+          <div class="calendar-dropdown" *ngIf="showCalendar" (click)="$event.stopPropagation()">
+            <div class="cal-mode-hint">{{ calendarModeLabel }}</div>
+
+            <!-- Month navigation -->
+            <div class="cal-nav">
+              <button class="cal-nav-btn" (click)="prevMonth()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <span class="cal-month-label">{{ calendarTitle }}</span>
+              <button class="cal-nav-btn" (click)="nextMonth()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+
+            <!-- Week day headers -->
+            <div class="cal-grid cal-headers">
+              <span *ngFor="let wd of weekDays" class="cal-header">{{ wd }}</span>
+            </div>
+
+            <!-- Days -->
+            <div class="cal-grid">
+              <button
+                *ngFor="let day of calendarDays"
+                class="cal-day"
+                [class.cal-empty]="!day"
+                [class.cal-start]="isDayStart(day)"
+                [class.cal-end]="isDayEnd(day)"
+                [class.cal-in-range]="isDayInRange(day)"
+                [class.cal-today]="isDayToday(day)"
+                [disabled]="!day"
+                (click)="selectDay(day)">
+                {{ day ? day.getDate() : '' }}
+              </button>
+            </div>
+
+            <!-- Range display -->
+            <div class="cal-range-display">
+              <span class="cal-range-from">
+                <span class="cal-range-dot cal-dot-start"></span>
+                {{ startDate | date:'MMM dd, yyyy' }}
+              </span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <span class="cal-range-to">
+                <span class="cal-range-dot cal-dot-end"></span>
+                {{ endDate | date:'MMM dd, yyyy' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Export button with dropdown -->
+      <div class="export-wrap" style="position:relative">
+        <button class="export-btn" (click)="toggleExportMenu($event)" [class.loading]="exporting">
+          <ng-container *ngIf="!exporting">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export Report
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </ng-container>
+          <ng-container *ngIf="exporting">
+            <svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Exporting {{ exportFormat?.toUpperCase() }}…
+          </ng-container>
+        </button>
+
+        <!-- Export format dropdown -->
+        <div class="export-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
+          <button class="export-menu-item" (click)="exportReport('pdf')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Export as PDF
+          </button>
+          <button class="export-menu-item" (click)="exportReport('excel')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="16" y2="17"/>
+            </svg>
+            Export as Excel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       KEY METRICS
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="metrics-grid stagger-2">
+    <div class="metric-card" *ngFor="let m of keyMetrics; let i = index"
+      [class]="'metric-card ' + m.colorClass"
+      [style.animation-delay]="(i * 70) + 'ms'">
+      <div class="metric-top">
+        <span class="metric-title">{{ m.title }}</span>
+        <span class="metric-icon" *ngIf="m.iconType === 'users'">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <span class="metric-icon" *ngIf="m.iconType === 'dollar'">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </span>
+        <span class="metric-icon" *ngIf="m.iconType === 'target'">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+          </svg>
+        </span>
+        <span class="metric-icon" *ngIf="m.iconType === 'activity'">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </span>
+      </div>
+      <div class="metric-value">{{ m.value }}</div>
+      <div class="metric-change" [class.change-up]="m.trend === 'up'" [class.change-down]="m.trend === 'down'">
+        <svg *ngIf="m.trend === 'up'"   width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+        <svg *ngIf="m.trend === 'down'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        {{ m.change }} vs last period
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PRICE CONTROL IMPACT CHART
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="ra-card stagger-3">
+    <div class="card-header">
+      <span class="ch-icon green-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Price Control Impact Analysis</h3>
+      <div class="chart-legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#22C55E"></span>Farmer Income</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#3B82F6"></span>Market Stability</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#F59E0B"></span>Compliance Rate</span>
+      </div>
+    </div>
+    <div class="chart-wrap area-wrap">
+      <svg [attr.viewBox]="'0 0 ' + aW + ' ' + (aH + 4)" class="chart-svg" preserveAspectRatio="xMidYMid meet">
+        <g *ngFor="let lbl of getAreaYLabels()">
+          <line [attr.x1]="aPL" [attr.y1]="lbl.y - 4" [attr.x2]="aW - 20" [attr.y2]="lbl.y - 4" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+          <text [attr.x]="aPL - 6" [attr.y]="lbl.y" text-anchor="end" font-size="10" fill="#9ca3af">{{ lbl.val }}</text>
+        </g>
+        <g *ngFor="let lbl of getAreaYLabelsRight()">
+          <text [attr.x]="aW - 14" [attr.y]="lbl.y" text-anchor="start" font-size="10" fill="#9ca3af">{{ lbl.val }}</text>
+        </g>
+        <polygon [attr.points]="getAreaFill()" fill="#22C55E" opacity="0.15"/>
+        <polyline [attr.points]="getAreaLine('farmerIncome')" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" [attr.stroke-dasharray]="getAreaPathLength('farmerIncome')" [attr.stroke-dashoffset]="getAreaDashOffset('farmerIncome')"/>
+        <polyline [attr.points]="getAreaLine('marketStability')" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" [attr.stroke-dasharray]="getAreaPathLength('marketStability')" [attr.stroke-dashoffset]="getAreaDashOffset('marketStability')"/>
+        <polyline [attr.points]="getAreaLine('compliance')" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" [attr.stroke-dasharray]="getAreaPathLength('compliance')" [attr.stroke-dashoffset]="getAreaDashOffset('compliance')"/>
+        <circle *ngFor="let dot of getAreaDots('farmerIncome')" [attr.cx]="dot.x" [attr.cy]="dot.y" r="4" fill="white" stroke="#22C55E" stroke-width="2" [style.opacity]="lineProgress"/>
+        <circle *ngFor="let dot of getAreaDots('marketStability')" [attr.cx]="dot.x" [attr.cy]="dot.y" r="4" fill="white" stroke="#3B82F6" stroke-width="2" [style.opacity]="lineProgress"/>
+        <circle *ngFor="let dot of getAreaDots('compliance')" [attr.cx]="dot.x" [attr.cy]="dot.y" r="4" fill="white" stroke="#F59E0B" stroke-width="2" [style.opacity]="lineProgress"/>
+        <text *ngFor="let d of priceImpactData; let i = index" [attr.x]="xLabelPositions()[i]" [attr.y]="aH - 6" text-anchor="middle" font-size="11" fill="#9ca3af">{{ d.month }}</text>
+        <line *ngFor="let d of priceImpactData; let i = index" [attr.x1]="xLabelPositions()[i]" [attr.y1]="aPT" [attr.x2]="xLabelPositions()[i]" [attr.y2]="aH - aPB" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3,3"/>
+        <rect *ngFor="let d of priceImpactData; let i = index" [attr.x]="xLabelPositions()[i] - 26" [attr.y]="aPT" width="52" [attr.height]="aH - aPB - aPT" fill="transparent" style="cursor:crosshair" (mouseenter)="showAreaTooltip(i, $event)" (mouseleave)="hideAreaTooltip()"/>
+      </svg>
+      <div class="chart-tooltip" *ngIf="areaTooltip.visible" [style.left.px]="areaTooltip.x" [style.top.px]="areaTooltip.y">
+        <div class="tt-label">{{ areaTooltip.label }}</div>
+        <div class="tt-row" *ngFor="let r of areaTooltip.rows">
+          <span class="tt-dot" [style.background]="r.color"></span><span>{{ r.name }}</span><span class="tt-val">{{ r.value }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       TRAINING + COMPLIANCE
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="two-col-row">
+    <div class="ra-card stagger-4">
+      <div class="card-header">
+        <span class="ch-icon amber-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+          </svg>
+        </span>
+        <h3 class="card-title">Training Program Effectiveness</h3>
+        <div class="chart-legend">
+          <span class="leg-item"><span class="leg-dot" style="background:#22C55E"></span>Adoption %</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#3B82F6"></span>Yield %</span>
+        </div>
+      </div>
+      <div class="chart-wrap training-wrap">
+        <svg [attr.viewBox]="'0 0 ' + bW + ' ' + (bH + 4)" class="chart-svg" preserveAspectRatio="xMidYMid meet">
+          <g *ngFor="let lbl of getBXLabels()">
+            <line [attr.x1]="lbl.x" [attr.y1]="bPT" [attr.x2]="lbl.x" [attr.y2]="bH - bPB" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3,3"/>
+            <text [attr.x]="lbl.x" [attr.y]="bH - bPB + 14" text-anchor="middle" font-size="10" fill="#9ca3af">{{ lbl.val }}</text>
+          </g>
+          <g *ngFor="let d of trainingData; let i = index">
+            <rect [attr.x]="bPL" [attr.y]="getBarY(i, bPT + 2)" [attr.width]="getBarAdoptionW(d.adoption)" [attr.height]="getBarRowH()" fill="#22C55E" rx="3" opacity="0.85"/>
+            <rect [attr.x]="bPL" [attr.y]="getBarY(i, bPT + 2 + getBarRowH() + 3)" [attr.width]="getBarYieldW(d.yield)" [attr.height]="getBarRowH()" fill="#3B82F6" rx="3" opacity="0.85"/>
+            <text [attr.x]="bPL - 6" [attr.y]="getBarLabelY(i)" text-anchor="end" font-size="10" fill="#374151">{{ d.program }}</text>
+            <rect [attr.x]="bPL - 4" [attr.y]="getBarY(i, bPT)" [attr.width]="bW - bPL" [attr.height]="bRowH() - 4" fill="transparent" style="cursor:pointer" (mouseenter)="showTrainingTooltip(i, $event)" (mouseleave)="hideTrainingTooltip()"/>
+          </g>
+        </svg>
+        <div class="chart-tooltip" *ngIf="trainingTooltip.visible" [style.left.px]="trainingTooltip.x" [style.top.px]="trainingTooltip.y">
+          <div class="tt-label">{{ trainingTooltip.label }}</div>
+          <div class="tt-row" *ngFor="let r of trainingTooltip.rows">
+            <span class="tt-dot" [style.background]="r.color"></span><span>{{ r.name }}</span><span class="tt-val">{{ r.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ra-card stagger-5">
+      <div class="card-header">
+        <span class="ch-icon blue-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </span>
+        <h3 class="card-title">Regional Compliance Trends</h3>
+      </div>
+      <div class="chart-wrap compliance-wrap">
+        <svg [attr.viewBox]="'0 0 ' + cW + ' ' + (cH + 4)" class="chart-svg" preserveAspectRatio="xMidYMid meet">
+          <g *ngFor="let lbl of getCYLabels()">
+            <line [attr.x1]="cPL" [attr.y1]="lbl.y - 4" [attr.x2]="cW - 20" [attr.y2]="lbl.y - 4" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+            <text [attr.x]="cPL - 6" [attr.y]="lbl.y" text-anchor="end" font-size="10" fill="#9ca3af">{{ lbl.val }}</text>
+          </g>
+          <polyline [attr.points]="getComplianceLine()" fill="none" stroke="#3B82F6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" [attr.stroke-dasharray]="getCompliancePathLen()" [attr.stroke-dashoffset]="getComplianceDashOffset()"/>
+          <circle *ngFor="let dot of getComplianceDots()" [attr.cx]="dot.x" [attr.cy]="dot.y" r="5" fill="white" stroke="#3B82F6" stroke-width="2.5" [style.opacity]="lineProgress"/>
+          <text *ngFor="let d of complianceRegions; let i = index" [attr.x]="cXLabelPositions()[i]" [attr.y]="cH - 6" text-anchor="middle" font-size="10" fill="#9ca3af">{{ d.region }}</text>
+          <rect *ngFor="let d of complianceRegions; let i = index" [attr.x]="cXLabelPositions()[i] - 28" [attr.y]="cPT" width="56" [attr.height]="cH - cPB - cPT" fill="transparent" style="cursor:crosshair" (mouseenter)="showComplianceTooltip(i, $event)" (mouseleave)="hideComplianceTooltip()"/>
+        </svg>
+        <div class="chart-tooltip" *ngIf="complianceTooltip.visible" [style.left.px]="complianceTooltip.x" [style.top.px]="complianceTooltip.y">
+          <div class="tt-label">{{ complianceTooltip.label }}</div>
+          <div class="tt-row" *ngFor="let r of complianceTooltip.rows">
+            <span class="tt-dot" [style.background]="r.color"></span><span>{{ r.name }}</span><span class="tt-val">{{ r.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       REPORT TEMPLATES
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="ra-card stagger-6">
+    <div class="card-header">
+      <span class="ch-icon gray-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Automated Report Templates</h3>
+    </div>
+
+    <div class="templates-grid">
+      <div class="template-card" *ngFor="let tpl of reportTemplates; let i = index" [style.animation-delay]="(i * 60) + 'ms'">
+        <div class="tpl-top">
+          <div class="tpl-icon-freq">
+            <span class="tpl-icon" *ngIf="tpl.iconType === 'dollar'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </span>
+            <span class="tpl-icon" *ngIf="tpl.iconType === 'target'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+              </svg>
+            </span>
+            <span class="tpl-icon" *ngIf="tpl.iconType === 'barchart'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+            </span>
+            <span class="tpl-icon" *ngIf="tpl.iconType === 'trending'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+              </svg>
+            </span>
+            <span class="tpl-icon" *ngIf="tpl.iconType === 'pie'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+                <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+              </svg>
+            </span>
+            <span class="freq-badge">{{ tpl.frequency }}</span>
+          </div>
+        </div>
+
+        <h4 class="tpl-name">{{ tpl.name }}</h4>
+        <p class="tpl-desc">{{ tpl.description }}</p>
+        <p class="tpl-last">Last generated: {{ tpl.lastGenerated }}</p>
+
+        <!-- Generate + Download buttons (PDF & Excel) -->
+        <div class="tpl-actions">
+          <!-- PDF -->
+          <button class="tpl-format-btn tpl-pdf-btn"
+            (click)="generateReport(tpl, 'pdf')"
+            [disabled]="tpl.generating">
+            <ng-container *ngIf="!tpl.generating">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              PDF
+            </ng-container>
+            <ng-container *ngIf="tpl.generating">
+              <svg class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+            </ng-container>
+          </button>
+
+          <!-- Excel -->
+          <button class="tpl-format-btn tpl-excel-btn"
+            (click)="generateReport(tpl, 'excel')"
+            [disabled]="tpl.generating">
+            <ng-container *ngIf="!tpl.generating">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="8" y1="13" x2="16" y2="13"/>
+                <line x1="8" y1="17" x2="16" y2="17"/>
+              </svg>
+              Excel
+            </ng-container>
+            <ng-container *ngIf="tpl.generating">
+              <svg class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+            </ng-container>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add this after the Report Templates section in your HTML -->
+<!-- ═════════════════════════════════════════════════════════════════
+     FARMERS PRODUCTION REPORT
+═════════════════════════════════════════════════════════════════════ -->
+<div class="ra-card stagger-8">
+  <div class="card-header">
+    <span class="ch-icon green-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </span>
+    <h3 class="card-title">Farmers Production Report</h3>
+    <div class="report-actions">
+      <button class="generate-report-btn" (click)="generateFarmersReport('pdf')" [disabled]="generatingFarmersReport">
+        <ng-container *ngIf="!generatingFarmersReport">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Generate PDF Report
+        </ng-container>
+        <ng-container *ngIf="generatingFarmersReport">
+          <svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          Generating PDF...
+        </ng-container>
+      </button>
+      <button class="generate-report-btn excel-btn" (click)="generateFarmersReport('excel')" [disabled]="generatingFarmersReport">
+        <ng-container *ngIf="!generatingFarmersReport">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="8" y1="13" x2="16" y2="13"/>
+            <line x1="8" y1="17" x2="16" y2="17"/>
+          </svg>
+          Generate Excel Report
+        </ng-container>
+        <ng-container *ngIf="generatingFarmersReport">
+          <svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          Generating Excel...
+        </ng-container>
+      </button>
+    </div>
+  </div>
+  
+  <div class="farmers-report-preview">
+    <div class="preview-header">
+      <div class="preview-title">Report Preview</div>
+      <div class="preview-filters">
+        <span class="filter-badge">Region: {{ selectedRegion }}</span>
+        <span class="filter-badge">Period: {{ dateLabel }}</span>
+        <span class="filter-badge">Report Type: Farmers Production Summary</span>
+      </div>
+    </div>
+    
+    <div class="preview-table-wrap">
+      <table class="farmers-table">
+        <thead>
+          <tr>
+            <th>Farmer ID</th>
+            <th>Farmer Name</th>
+            <th>Region</th>
+            <th>Crop Type</th>
+            <th>Production (kg)</th>
+            <th>Yield per Hectare</th>
+            <th>Quality Grade</th>
+            <th>Compliance Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let farmer of farmersProductionData">
+            <td>{{ farmer.id }}</td>
+            <td>{{ farmer.name }}</td>
+            <td>{{ farmer.region }}</td>
+            <td>{{ farmer.cropType }}</td>
+            <td>{{ farmer.production | number }}</td>
+            <td>{{ farmer.yieldPerHectare | number:'1.0-0' }} kg/ha</td>
+            <td>
+              <span class="quality-badge" [class]="'quality-' + farmer.qualityGrade.toLowerCase()">
+                {{ farmer.qualityGrade }}
+              </span>
+            </td>
+            <td>
+              <span class="compliance-badge" [class]="'compliance-' + (farmer.complianceStatus ? 'yes' : 'no')">
+                {{ farmer.complianceStatus ? 'Compliant' : 'Non-Compliant' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="preview-footer">
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total Farmers:</span>
+          <span class="stat-value">{{ farmersProductionData.length }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total Production:</span>
+          <span class="stat-value">{{ getTotalProduction() | number }} kg</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Average Yield:</span>
+          <span class="stat-value">{{ getAverageYield() | number:'1.0-0' }} kg/ha</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Compliance Rate:</span>
+          <span class="stat-value">{{ getComplianceRate() }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       KEY INSIGHTS
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="ra-card stagger-7">
+    <div class="card-header">
+      <span class="ch-icon amber-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Key Insights &amp; Recommendations</h3>
+    </div>
+    <div class="insights-list">
+      <div class="insight-item insight-green">
+        <div class="insight-icon ig-green">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="insight-body">
+          <h4 class="insight-title ig-green-text">Price Control Success</h4>
+          <p class="insight-desc">Government price interventions have increased average farmer income by 23.7% over the past 6 months. Cocoa and coffee farmers show the highest benefit rates.</p>
+        </div>
+      </div>
+      <div class="insight-item insight-blue">
+        <div class="insight-icon ig-blue">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </div>
+        <div class="insight-body">
+          <h4 class="insight-title ig-blue-text">Training Program Excellence</h4>
+          <p class="insight-desc">New farming techniques training shows 92% adoption rate with 28% yield improvement. Consider expanding this program to underperforming regions.</p>
+        </div>
+      </div>
+      <div class="insight-item insight-amber">
+        <div class="insight-icon ig-amber">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="insight-body">
+          <h4 class="insight-title ig-amber-text">Regional Attention Needed</h4>
+          <p class="insight-desc">South-West, North-West, and Far North regions show lower compliance rates (76–82%). Recommend targeted interventions and additional training resources.</p>
+        </div>
+      </div>
+      <div class="insight-item insight-red">
+        <div class="insight-icon ig-red">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="insight-body">
+          <h4 class="insight-title ig-red-text">Urgent Action Required</h4>
+          <p class="insight-desc">Market compliance has dropped 1.2% this quarter. Immediate enforcement actions needed in regions with persistent non-compliance to maintain price stability.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

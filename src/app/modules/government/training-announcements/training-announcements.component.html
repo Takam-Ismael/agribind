@@ -1,0 +1,253 @@
+<div class="announcements-wrapper">
+
+  <!-- Create Training Announcement Card -->
+  <div class="card card--accent">
+    <div class="card__header">
+      <div class="card__title">
+        <span class="icon icon--amber">📢</span>
+        <span>Create Training Announcement</span>
+      </div>
+    </div>
+    <div class="card__body">
+      <div class="creation-grid">
+
+        <!-- Column 1: Content Creation -->
+        <div class="form-section">
+          <div class="form-group">
+            <label class="form-label form-label--bold">Training Title</label>
+            <input
+              type="text"
+              class="form-input"
+              placeholder="e.g., Cocoa Pest Control Training"
+              [(ngModel)]="title"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label form-label--bold">Audio Recording</label>
+            <div class="audio-section">
+              <select class="form-select" [(ngModel)]="recordingLanguage">
+                <option *ngFor="let lang of languages" [value]="lang">🌐 {{ lang }}</option>
+              </select>
+              <div class="recording-controls">
+                <button
+                  class="btn"
+                  [class.btn--record]="!isRecording"
+                  [class.btn--stop]="isRecording"
+                  (click)="handleRecord()"
+                >
+                  <span class="btn__icon">{{ isRecording ? '⏹' : '🎙' }}</span>
+                  {{ isRecording ? 'Stop Recording' : 'Record Message' }}
+                </button>
+                <div class="recording-indicator" *ngIf="isRecording">
+                  <span class="pulse-dot"></span>
+                  <span class="recording-text">Recording...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label form-label--bold">Languages</label>
+            <div class="tag-group">
+              <button
+                *ngFor="let lang of languages"
+                class="tag"
+                [class.tag--selected]="selectedLanguages.includes(lang)"
+                (click)="toggleLanguage(lang)"
+              >
+                {{ lang }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Target Audience -->
+        <div class="form-section">
+          <label class="form-label form-label--bold">Target Audience</label>
+
+          <select class="form-select" [(ngModel)]="targetAudience">
+            <option value="All Farmers">👥 All Farmers</option>
+            <option value="Specific Regions">📍 Specific Regions</option>
+            <option value="Crop Specific">🎯 Crop Specific</option>
+          </select>
+
+          <div class="form-group" *ngIf="targetAudience === 'Specific Regions'">
+            <label class="form-label">Select Regions</label>
+            <div class="chip-grid">
+              <button
+                *ngFor="let region of regions"
+                class="chip"
+                [class.chip--selected-blue]="selectedRegions.includes(region)"
+                (click)="toggleRegion(region)"
+              >
+                {{ region }}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="targetAudience === 'Crop Specific'">
+            <label class="form-label">Select Crops</label>
+            <div class="chip-grid">
+              <button
+                *ngFor="let crop of crops"
+                class="chip"
+                [class.chip--selected-green]="selectedCrops.includes(crop)"
+                (click)="toggleCrop(crop)"
+              >
+                {{ crop }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Scheduling -->
+        <div class="form-section">
+          <label class="form-label form-label--bold">Delivery Schedule</label>
+
+          <div class="schedule-section">
+            <button
+              class="btn btn--primary btn--full"
+              [disabled]="!title"
+              (click)="createOrUpdateAnnouncement()"
+            >
+              <span class="btn__icon">{{ editingId ? '✏️' : '📤' }}</span>
+              {{ editingId ? 'Update Announcement' : 'Send Now' }}
+            </button>
+
+            <div class="divider">
+              <span class="divider__text">OR</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Schedule for Later</label>
+              <input
+                type="date"
+                class="form-input form-input--date"
+                [(ngModel)]="scheduleDateStr"
+                [min]="todayStr"
+              />
+            </div>
+          </div>
+
+          <div class="reach-summary">
+            <h4 class="reach-summary__title">Estimated Reach</h4>
+            <div class="reach-summary__row">
+              <span>Target Farmers:</span>
+              <strong>{{ getEstimatedReach() }}</strong>
+            </div>
+            <div class="reach-summary__row">
+              <span>Expected Delivery:</span>
+              <strong class="text--green">95%</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Templates -->
+  <div class="card">
+    <div class="card__header">
+      <div class="card__title">Quick Announcement Templates</div>
+    </div>
+    <div class="card__body">
+      <div class="templates-grid">
+        <button
+          *ngFor="let template of quickTemplates"
+          class="template-card"
+          (click)="applyTemplate(template)"
+        >
+          <div class="template-card__top">
+            <span class="template-card__icon">{{ template.icon }}</span>
+            <span class="badge badge--quick">Quick</span>
+          </div>
+          <h4 class="template-card__title">{{ template.title }}</h4>
+          <p class="template-card__desc">{{ template.description }}</p>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement History -->
+  <div class="card">
+    <div class="card__header">
+      <div class="card__title">Training Announcements</div>
+    </div>
+    <div class="card__body">
+      <div class="announcements-list">
+        <div
+          *ngFor="let announcement of announcements"
+          class="announcement-item"
+        >
+          <div class="announcement-item__main">
+            <div class="announcement-item__header">
+              <h4 class="announcement-item__title">{{ announcement.title }}</h4>
+              <span class="status-badge" [ngClass]="getStatusClass(announcement.status)">
+                <span class="status-badge__icon">{{ getStatusIcon(announcement.status) }}</span>
+                {{ announcement.status }}
+              </span>
+            </div>
+
+            <div class="announcement-item__meta">
+              <div class="meta-block">
+                <div class="meta-block__label">🌐 Languages:</div>
+                <div class="meta-block__tags">
+                  <span *ngFor="let lang of announcement.languages" class="tag tag--outline">{{ lang }}</span>
+                </div>
+              </div>
+              <div class="meta-block">
+                <div class="meta-block__label">🎯 Audience:</div>
+                <div>{{ announcement.targetAudience }}</div>
+              </div>
+              <div class="meta-block">
+                <div class="meta-block__label">👥 Reach:</div>
+                <div>{{ announcement.reachCount ? (announcement.reachCount | number) : 'Pending' }}</div>
+              </div>
+              <div class="meta-block">
+                <div class="meta-block__label">📊 Engagement:</div>
+                <div>{{ announcement.engagementRate ? announcement.engagementRate + '%' : 'Pending' }}</div>
+              </div>
+            </div>
+
+            <div class="progress-bar-wrapper" *ngIf="announcement.status === 'Sent' && announcement.engagementRate">
+              <div class="progress-bar-label">
+                <span>Engagement Rate</span>
+                <span>{{ announcement.engagementRate }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar__fill" [style.width.%]="announcement.engagementRate"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="announcement-item__actions">
+            <button
+              *ngIf="announcement.status === 'Draft'"
+              class="btn btn--sm btn--amber"
+              (click)="sendAnnouncement(announcement.id)"
+            >
+              📤 Send
+            </button>
+            <!-- Play button with click handler -->
+            <button
+              class="btn btn--sm btn--outline"
+              (click)="playAudio(announcement.id)"
+            >
+              🔊 Play
+            </button>
+            <!-- Edit button with click handler -->
+            <button
+              class="btn btn--sm btn--outline"
+              (click)="editAnnouncement(announcement.id)"
+            >
+              ✏️ Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

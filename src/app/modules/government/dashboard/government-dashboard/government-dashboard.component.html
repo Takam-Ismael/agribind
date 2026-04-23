@@ -1,0 +1,82 @@
+<div class="gov-layout">
+  <!-- Sidebar -->
+  <app-government-sidebar
+    [isOpen]="sidebarOpen"
+    (closeSidebar)="closeSidebar()">
+  </app-government-sidebar>
+
+  <!-- Main content -->
+  <div class="gov-main">
+    <!-- Top bar -->
+    <header class="gov-topbar">
+  <!-- Left: menu + logo + page title -->
+  <div class="topbar-left">
+    <button class="menu-btn" (click)="toggleSidebar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="topbar-brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill="#2d3a8c"/>
+          <path d="M20 8L8 16v16h8v-8h8v8h8V16L20 8z" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">Agribind</span>
+        <span class="brand-sub">Agricultural Management System</span>
+      </div>
+    </div>
+
+    <div class="topbar-divider"></div>
+    <span class="topbar-page-title">{{ pageTitle }}</span>
+  </div>
+
+  <!-- Center: search -->
+  <div class="topbar-search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" placeholder="Search farmers, regions..." />
+  </div>
+
+  <!-- Right: notifications + status + user -->
+  <div class="topbar-right">
+    <!-- Notifications -->
+    <button class="topbar-icon-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="notif-badge">3</span>
+    </button>
+
+    <!-- System status -->
+    <div class="system-status">
+      <span class="status-dot"></span>
+      <span class="status-text">System<br/>Online</span>
+    </div>
+
+    <!-- User -->
+    <div class="topbar-user" *ngIf="currentUser">
+      <div class="topbar-user-info">
+        <span class="topbar-user-name">Dr. Jean Mbarga</span>
+        <span class="topbar-user-role">Agricultural Officer</span>
+      </div>
+      <div class="user-avatar">
+        {{ currentUser.username?.substring(0, 2)?.toUpperCase() }}
+      </div>
+    </div>
+  </div>
+</header>
+
+    <!-- Page content -->
+    <main class="gov-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

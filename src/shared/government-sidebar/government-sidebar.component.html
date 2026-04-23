@@ -1,0 +1,179 @@
+<aside class="gov-sidebar" [class.open]="isOpen">
+
+  <!-- ── Logo ──────────────────────────────────────────────────────── -->
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+        <path d="M20 8L8 16v16h8v-8h8v8h8V16L20 8z" fill="#ffffff"/>
+        <path d="M16 24h8v8h-8z" fill="#ffffff" fill-opacity="0.55"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-title">Agribind</span>
+      <span class="logo-sub">Agricultural Management</span>
+    </div>
+    <button class="close-btn" (click)="closeSidebar.emit()" aria-label="Close sidebar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── Navigation ────────────────────────────────────────────────── -->
+  <nav class="sidebar-nav">
+
+    <!-- Section: Overview -->
+    <div class="nav-section-label">Overview</div>
+    <ul>
+      <li>
+        <button class="nav-item"
+                [class.active]="isActive('/government/national-overview')"
+                (click)="navigate('/government/national-overview')">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+            </svg>
+          </span>
+          <span class="nav-label">National Overview</span>
+        </button>
+      </li>
+
+      <li>
+        <button class="nav-item"
+                [class.active]="isActive('/government/production-monitoring')"
+                (click)="navigate('/government/production-monitoring')">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+              <polyline points="16 7 22 7 22 13"/>
+            </svg>
+          </span>
+          <span class="nav-label">Production Monitoring</span>
+          <span class="nav-badge">Live</span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- Section: Management -->
+    <div class="nav-section-label">Management</div>
+    <ul>
+      <li>
+        <button class="nav-item"
+                [class.active]="isActive('/government/cooperative-management')"
+                (click)="navigate('/government/cooperative-management')">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </span>
+          <span class="nav-label">Cooperatives</span>
+        </button>
+      </li>
+      <li>
+        <button class="nav-item"
+                [class.active]="isActive('/government/set-market-prices')"
+                (click)="navigate('/government/set-market-prices')">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </span>
+          <span class="nav-label">Set Market Prices</span>
+        </button>
+      </li>
+
+      <li>
+        <button class="nav-item"
+                [class.active]="isActive('/government/training-announcements')"
+                (click)="navigate('/government/training-announcements')">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </span>
+          <span class="nav-label">Training Announcements</span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- Section: Analytics -->
+    <div class="nav-section-label">Analytics</div>
+    <ul>
+      <li>
+        <button class="nav-item"
+                [class.active]="isActive('/government/reports-analytics')"
+                (click)="navigate('/government/reports-analytics')">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </span>
+          <span class="nav-label">Reports &amp; Analytics</span>
+        </button>
+      </li>
+
+      <li>
+        <button class="nav-item"
+                [class.active]="isActive('/government/system-settings')"
+                (click)="navigate('/government/system-settings')">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </span>
+          <span class="nav-label">System Settings</span>
+        </button>
+      </li>
+    </ul>
+
+  </nav>
+
+  <!-- ── Footer: user card + logout ───────────────────────────────── -->
+  <div class="sidebar-footer">
+
+    <div class="footer-user">
+      <div class="footer-avatar">{{ userInitials }}</div>
+      <div class="footer-user-info">
+        <span class="footer-user-name">{{ userName }}</span>
+        <span class="footer-user-role">{{ userRole }}</span>
+      </div>
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <button class="logout-btn" (click)="logout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      <span>Sign out</span>
+    </button>
+
+  </div>
+
+</aside>
+
+<!-- Mobile backdrop -->
+<div class="sidebar-overlay"
+     [class.visible]="isOpen"
+     (click)="closeSidebar.emit()">
+</div>

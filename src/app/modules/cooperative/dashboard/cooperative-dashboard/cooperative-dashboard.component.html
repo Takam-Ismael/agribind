@@ -1,0 +1,37 @@
+<!-- E:\INGE 4 ISI\Tutorial Project\agribind-platform\source-code\agribind-frontend\src\app\modules\cooperative\dashboard\cooperative-dashboard\cooperative-dashboard.component.html -->
+
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <app-cooperative-sidebar
+    [class.open]="sidebarOpen"
+    (closeSidebar)="closeSidebar()">
+  </app-cooperative-sidebar>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Header (Mobile) -->
+    <div class="mobile-header">
+      <button class="menu-btn" (click)="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="header-title">
+        <h2>AgriBind Cooperative</h2>
+      </div>
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+      </div>
+    </div>
+
+    <!-- Content Router Outlet -->
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <!-- Mobile Sidebar Overlay -->
+  <div
+    class="sidebar-overlay"
+    *ngIf="sidebarOpen"
+    (click)="closeSidebar()">
+  </div>
+</div>

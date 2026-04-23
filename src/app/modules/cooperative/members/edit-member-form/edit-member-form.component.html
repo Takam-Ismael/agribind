@@ -1,0 +1,149 @@
+<div class="modal-overlay" *ngIf="isModalOpen">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Edit Member</h2>
+      <button class="close-btn" (click)="closeModal()">✖</button>
+    </div>
+
+    <form [formGroup]="memberForm" (ngSubmit)="onSubmit()">
+      <div class="modal-body">
+        <!-- Loading Indicator -->
+        <div *ngIf="isLoading" class="loading-indicator">
+          <i class="fas fa-spinner fa-spin"></i> Loading member data...
+        </div>
+
+        <!-- Member ID -->
+        <div class="form-group">
+          <label>AR Code (Member ID)</label>
+          <input formControlName="id" readonly class="readonly-field">
+        </div>
+
+        <div class="form-group">
+          <label>Name <span class="required">*</span></label>
+          <input formControlName="name" placeholder="Enter full name">
+          <div *ngIf="memberForm.get('name')?.invalid && memberForm.get('name')?.touched" class="error-message">
+            <span *ngIf="memberForm.get('name')?.errors?.['required']">Name is required</span>
+            <span *ngIf="memberForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number <span class="required">*</span></label>
+          <input type="tel" formControlName="phoneNumber" placeholder="+237 612345678">
+          <div *ngIf="memberForm.get('phoneNumber')?.invalid && memberForm.get('phoneNumber')?.touched" class="error-message">
+            <span *ngIf="memberForm.get('phoneNumber')?.errors?.['required']">Phone number is required</span>
+            <span *ngIf="memberForm.get('phoneNumber')?.errors?.['pattern']">Format: +237 612345678</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" formControlName="email" placeholder="email@example.com">
+          <div *ngIf="memberForm.get('email')?.invalid && memberForm.get('email')?.touched" class="error-message">
+            Invalid email format
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Member Type <span class="required">*</span></label>
+          <select formControlName="type" [disabled]="true">
+            <option value="FARMER">Farmer</option>
+            <option value="COOPERATIVE">Cooperative</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Region <span class="required">*</span></label>
+          <select formControlName="region">
+            <option value="">Select region</option>
+            <option *ngFor="let region of regionOptions" [value]="region">{{ region }}</option>
+          </select>
+          <div *ngIf="memberForm.get('region')?.invalid && memberForm.get('region')?.touched" class="error-message">
+            Region is required
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Department</label>
+            <input formControlName="department" placeholder="Enter department">
+          </div>
+          <div class="form-group">
+            <label>District</label>
+            <input formControlName="district" placeholder="Enter district">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Village</label>
+          <input formControlName="village" placeholder="Enter village">
+        </div>
+
+        <!-- Farmer-specific fields -->
+        <div *ngIf="memberForm.get('type')?.value === 'FARMER'" class="farmer-fields">
+          <h3 class="section-title">Farmer Details</h3>
+
+          <div class="form-group">
+            <label>Agricultural Type</label>
+            <select formControlName="agriculturalType">
+              <option value="">Select type</option>
+              <option *ngFor="let type of agriculturalTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Crop Types</label>
+            <div class="crop-checkboxes">
+              <label *ngFor="let crop of cropTypeOptions" class="checkbox-label">
+                <input type="checkbox" 
+                       [checked]="isCropSelected(crop)"
+                       (change)="toggleCrop(crop)">
+                <span>{{ crop }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Land Area (hectares)</label>
+            <input type="number" formControlName="landArea" placeholder="0.0" step="0.1" min="0.1">
+            <div *ngIf="memberForm.get('landArea')?.invalid && memberForm.get('landArea')?.touched" class="error-message">
+              Land area must be at least 0.1 hectares
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Farm GPS Coordinates</label>
+            <input formControlName="gpsCoordinates" placeholder="e.g., 5.9631, 10.1591 (latitude, longitude)">
+            <small class="help-text">Enter GPS coordinates in format: latitude, longitude</small>
+          </div>
+
+          <div class="form-group">
+            <label>Farm Location (Alternative)</label>
+            <input formControlName="farmLocation" placeholder="e.g., Mankon Town">
+            <small class="help-text">Specific location of the farm (village, town, or area name)</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Status <span class="required">*</span></label>
+          <select formControlName="status">
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="PENDING">Pending</option>
+            <option value="SUSPENDED">Suspended</option>
+          </select>
+          <div *ngIf="memberForm.get('status')?.invalid && memberForm.get('status')?.touched" class="error-message">
+            Status is required
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting">Cancel</button>
+        <button type="submit" class="btn-submit" [disabled]="isSubmitting || !memberForm.valid || isLoading">
+          {{ isSubmitting ? 'Updating...' : 'Update Member' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

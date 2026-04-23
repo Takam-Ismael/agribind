@@ -1,0 +1,510 @@
+<div class="main-content">
+  <div class="page-content">
+
+    <!-- Header with User Info -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Production Management</h1>
+        <p class="page-description">Track farmer deliveries, manage production cycles, and monitor quality standards</p>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar">
+          <span class="avatar-text">{{ user.initials }}</span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ totalProduction }}</h3>
+          <p class="stat-label">Total Production</p>
+          <p class="stat-trend positive">{{ totalProductionPercent }}</p>
+        </div>
+        <div class="stat-icon green">
+          <i class="fas fa-box"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ activeFarmers }}</h3>
+          <p class="stat-label">Active Farmers</p>
+          <p class="stat-trend positive">{{ activeFarmersParticipation }} participation</p>
+        </div>
+        <div class="stat-icon green">
+          <i class="fas fa-users"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ gradeAProduction }}</h3>
+          <p class="stat-label">Grade A Production</p>
+          <p class="stat-trend warning">{{ gradeAPercent }} of total</p>
+        </div>
+        <div class="stat-icon yellow">
+          <i class="fas fa-star"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ thisMonthDeliveries }}</h3>
+          <p class="stat-label">This Month Deliveries</p>
+          <p class="stat-trend positive">{{ thisMonthChange }} vs last month</p>
+        </div>
+        <div class="stat-icon green">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Action Buttons -->
+    <div class="action-bar">
+      <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input
+          type="text"
+          placeholder="Search by farmer, crop, or production ID..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+        />
+      </div>
+      <div class="button-group">
+        <button class="btn-primary" (click)="onRecordProduction()">
+          <i class="fas fa-plus"></i> Record Production
+        </button>
+        <button class="btn-outline" (click)="onExport()" [disabled]="exportLoading">
+          <i class="fas fa-download"></i> {{ exportLoading ? 'Exporting...' : 'Export' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label for="cropSelect"><i class="fas fa-seedling"></i> Crop Type</label>
+        <select id="cropSelect" [(ngModel)]="selectedCrop" (ngModelChange)="onFilterChange()">
+          <option *ngFor="let crop of cropTypes" [value]="crop">{{ crop }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="gradeSelect"><i class="fas fa-star"></i> Quality Grade</label>
+        <select id="gradeSelect" [(ngModel)]="selectedGrade" (ngModelChange)="onFilterChange()">
+          <option *ngFor="let grade of qualityGrades" [value]="grade">{{ grade }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+        <tr>
+          <th>Production ID</th>
+          <th>Date</th>
+          <th>Farmer</th>
+          <th>Crop</th>
+          <th>Quantity (Unit)</th>
+          <th>Grade</th>
+          <th>Warehouse</th>
+          <th>Unit Price</th>
+          <th>Total Value (XAF)</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let record of paginatedProduction">
+          <td>{{ record.id }}</td>
+          <td>{{ record.date }}</td>
+          <td>{{ record.farmer }}</td>
+          <td>{{ record.crop }}</td>
+          <td>{{ record.quantity }} {{ record.unit || 'MT' }}</td>
+          <td><span class="badge" [ngClass]="record.gradeClass">{{ record.grade }}</span></td>
+          <td>{{ record.warehouse }}</td>
+          <td>{{ record.unitPrice }}</td>
+          <td><strong>{{ record.value }}</strong></td>
+          <td><span class="status-badge" [ngClass]="record.statusClass">{{ record.status }}</span></td>
+          <td>
+            <div class="action-buttons">
+              <button class="view-btn" (click)="viewProduction(record)" title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="edit-btn" (click)="editProduction(record)" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="delete-btn" (click)="deleteProduction(record)" title="Delete">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredProduction.length === 0">
+          <td colspan="11" class="no-data">
+            <i class="fas fa-inbox"></i>
+            <p>No production records found.</p>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button (click)="previousPage()" [disabled]="currentPage === 1">← Prev</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages">Next →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Record Production Modal -->
+<div class="modal-overlay" *ngIf="showRecordModal" (click)="closeRecordModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Record New Production</h2>
+      <button class="modal-close" (click)="closeRecordModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="farmerSearch">Search Farmer *</label>
+            <div class="farmer-search-wrapper">
+              <input type="text" id="farmerSearch" class="form-input" placeholder="Type farmer name or phone number..." [(ngModel)]="farmerSearchTerm" (input)="onFarmerSearchInput($event)" name="farmerSearch" autocomplete="off" />
+              <button type="button" class="clear-farmer-btn" *ngIf="selectedFarmer" (click)="clearFarmerSelection()" title="Clear selection">×</button>
+              <div class="farmer-dropdown" *ngIf="showFarmerDropdown && searchedFarmers.length > 0">
+                <div class="farmer-item" *ngFor="let farmer of searchedFarmers" (click)="selectFarmer(farmer)">
+                  <div class="farmer-name">{{ farmer.name }}</div>
+                  <div class="farmer-details">{{ farmer.phoneNumber }} • {{ farmer.agriculturalType }} • {{ farmer.landArea }} ha</div>
+                </div>
+              </div>
+              <div class="selected-farmer-info" *ngIf="selectedFarmer">
+                <span class="info-label">Selected:</span>
+                <span class="info-value">{{ selectedFarmer.name }}</span>
+                <span class="info-detail">{{ selectedFarmer.phoneNumber }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cropInput">Crop Type *</label>
+            <select id="cropInput" [(ngModel)]="newProduction.productName" name="cropType" required class="form-input" (ngModelChange)="onProductionFormChange()">
+              <option value="COCOA">Cocoa</option>
+              <option value="COFFEE">Coffee</option>
+              <option value="MAIZE">Maize</option>
+              <option value="CASSAVA">Cassava</option>
+              <option value="RICE">Rice</option>
+              <option value="COTTON">Cotton</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="quantityInput">Quantity *</label>
+            <input type="number" id="quantityInput" [(ngModel)]="newProduction.quantity" name="quantity" min="0.1" step="0.1" required class="form-input" placeholder="e.g., 2.5" (ngModelChange)="onProductionFormChange()" />
+          </div>
+          <div class="form-group">
+            <label for="unitInput">Unit *</label>
+            <select id="unitInput" [(ngModel)]="newProduction.unit" name="unit" required class="form-input" (ngModelChange)="onProductionFormChange()">
+              <option *ngFor="let unit of availableUnits" [value]="unit">{{ unit }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="gradeInput">Quality Grade *</label>
+            <select id="gradeInput" [(ngModel)]="newProduction.qualityGrade" name="qualityGrade" required class="form-input" (ngModelChange)="onProductionFormChange()">
+              <option value="GRADE_A">Grade A</option>
+              <option value="GRADE_B">Grade B</option>
+              <option value="GRADE_C">Grade C</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="maturityStatusInput">Maturity Status *</label>
+            <select id="maturityStatusInput" [(ngModel)]="newProduction.maturityStatus" name="maturityStatus" required class="form-input">
+              <option *ngFor="let status of maturityStatuses" [value]="status.value" [title]="status.description">{{ status.label }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="warehouseInput">Warehouse *</label>
+            <select id="warehouseInput" [(ngModel)]="newProduction.warehouse" name="warehouse" required class="form-input">
+              <option *ngFor="let warehouse of warehouses" [value]="warehouse">{{ warehouse }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="dateInput">Delivery Date *</label>
+            <input type="date" id="dateInput" [(ngModel)]="newProduction.productionDate" name="deliveryDate" required class="form-input" />
+          </div>
+        </div>
+        <div class="price-info-section">
+          <div class="price-info-card">
+            <div class="price-row">
+              <span class="price-label">Unit Price (per {{ newProduction.unit || 'MT' }}):</span>
+              <span class="price-value">{{ formatValue(newProduction.unitPrice) }}</span>
+            </div>
+            <div class="price-row total">
+              <span class="price-label">Total Value:</span>
+              <span class="price-value-total">{{ formatValue(newProduction.valueXaf) }}</span>
+            </div>
+            <div class="price-note">
+              <small>* Prices are automatically calculated based on crop type and quality grade</small>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeRecordModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="submitProduction()" [disabled]="!isFormValid()">Record Production</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" *ngIf="showExportModal" (click)="closeExportModal()">
+  <div class="modal-content modal-export" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>Export Production Data</h2>
+        <p class="modal-description">Choose what to export, date range, and format</p>
+      </div>
+      <button class="modal-close" (click)="closeExportModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- What to export -->
+      <div class="export-section">
+        <p class="export-section-label"><i class="fas fa-database"></i> What to export</p>
+        <div class="export-option-group">
+
+          <label class="export-option" [class.selected]="exportScope === 'records'">
+            <input type="radio" [(ngModel)]="exportScope" name="exportScope" value="records" />
+            <div class="export-option-icon"><i class="fas fa-table"></i></div>
+            <div class="export-option-text">
+              <span class="export-option-title">Production Records Table</span>
+              <span class="export-option-desc">{{ filteredProduction.length }} records — ID, date, farmer, crop, quantity, grade, value, status</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+
+          <label class="export-option" [class.selected]="exportScope === 'summary'">
+            <input type="radio" [(ngModel)]="exportScope" name="exportScope" value="summary" />
+            <div class="export-option-icon"><i class="fas fa-chart-bar"></i></div>
+            <div class="export-option-text">
+              <span class="export-option-title">Summary &amp; Statistics</span>
+              <span class="export-option-desc">Dashboard metrics, breakdown by crop type and quality grade</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+
+          <label class="export-option" [class.selected]="exportScope === 'both'">
+            <input type="radio" [(ngModel)]="exportScope" name="exportScope" value="both" />
+            <div class="export-option-icon"><i class="fas fa-layer-group"></i></div>
+            <div class="export-option-text">
+              <span class="export-option-title">Everything</span>
+              <span class="export-option-desc">Production records table + summary statistics</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Date Range -->
+      <div class="export-section">
+        <p class="export-section-label"><i class="fas fa-calendar-alt"></i> Date range</p>
+        <div class="export-option-group">
+          <label class="export-option" [class.selected]="exportDateRange === 'all'">
+            <input type="radio" [(ngModel)]="exportDateRange" name="dateRange" value="all" />
+            <div class="export-option-icon"><i class="fas fa-infinity"></i></div>
+            <div class="export-option-text">
+              <span class="export-option-title">All Records</span>
+              <span class="export-option-desc">Export all {{ filteredProduction.length }} filtered records</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+          <label class="export-option" [class.selected]="exportDateRange === 'custom'">
+            <input type="radio" [(ngModel)]="exportDateRange" name="dateRange" value="custom" />
+            <div class="export-option-icon"><i class="fas fa-calendar-range"></i></div>
+            <div class="export-option-text">
+              <span class="export-option-title">Custom Date Range</span>
+              <span class="export-option-desc">Select a specific start and end date</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+        </div>
+        <div class="date-range-row" *ngIf="exportDateRange === 'custom'">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" [(ngModel)]="exportStartDate" name="startDate" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" [(ngModel)]="exportEndDate" name="endDate" class="form-input" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Format -->
+      <div class="export-section">
+        <p class="export-section-label"><i class="fas fa-file-export"></i> Export format</p>
+        <div class="export-format-group">
+          <label class="export-format-card" [class.selected]="exportFormat === 'csv'">
+            <input type="radio" [(ngModel)]="exportFormat" name="exportFormat" value="csv" />
+            <i class="fas fa-file-csv export-format-icon"></i>
+            <span class="export-format-name">CSV</span>
+            <span class="export-format-desc">Excel / Spreadsheet</span>
+          </label>
+          <label class="export-format-card" [class.selected]="exportFormat === 'json'">
+            <input type="radio" [(ngModel)]="exportFormat" name="exportFormat" value="json" />
+            <i class="fas fa-file-code export-format-icon"></i>
+            <span class="export-format-name">JSON</span>
+            <span class="export-format-desc">API / Developer</span>
+          </label>
+          <label class="export-format-card" [class.selected]="exportFormat === 'pdf'">
+            <input type="radio" [(ngModel)]="exportFormat" name="exportFormat" value="pdf" />
+            <i class="fas fa-file-pdf export-format-icon"></i>
+            <span class="export-format-name">PDF</span>
+            <span class="export-format-desc">Print / Share</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Preview hint -->
+      <div class="export-preview">
+        <i class="fas fa-info-circle"></i>
+        <span *ngIf="exportFormat === 'csv' && exportScope === 'records'">Downloads <strong>production-records.csv</strong> — {{ filteredProduction.length }} rows with all columns</span>
+        <span *ngIf="exportFormat === 'csv' && exportScope === 'summary'">Downloads <strong>production-summary.csv</strong> — metrics, crop &amp; grade breakdown</span>
+        <span *ngIf="exportFormat === 'csv' && exportScope === 'both'">Downloads 2 CSV files: records table &amp; summary statistics</span>
+        <span *ngIf="exportFormat === 'json'">Downloads <strong>production.json</strong> — structured data with summary &amp; records array</span>
+        <span *ngIf="exportFormat === 'pdf'">Opens a print-ready PDF — use <strong>Save as PDF</strong> in the print dialog</span>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeExportModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="performExport()" [disabled]="exportLoading">
+        <i class="fas fa-download"></i>
+        {{ exportLoading ? 'Exporting...' : 'Export ' + exportFormat.toUpperCase() }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- View Production Modal -->
+<div class="modal-overlay" *ngIf="showViewModal" (click)="closeViewModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Production Record Details</h2>
+      <button class="modal-close" (click)="closeViewModal()">×</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedRecord">
+      <div class="detail-section">
+        <div class="detail-row"><span class="detail-label">Production ID:</span><span class="detail-value">{{ selectedRecord.id }}</span></div>
+        <div class="detail-row"><span class="detail-label">Date:</span><span class="detail-value">{{ selectedRecord.date }}</span></div>
+        <div class="detail-row"><span class="detail-label">Farmer:</span><span class="detail-value">{{ selectedRecord.farmer }}</span></div>
+        <div class="detail-row"><span class="detail-label">Crop:</span><span class="detail-value">{{ selectedRecord.crop }}</span></div>
+        <div class="detail-row"><span class="detail-label">Quantity:</span><span class="detail-value">{{ selectedRecord.quantity }} {{ selectedRecord.unit || 'MT' }}</span></div>
+        <div class="detail-row"><span class="detail-label">Grade:</span><span class="detail-value"><span class="badge" [ngClass]="selectedRecord.gradeClass">{{ selectedRecord.grade }}</span></span></div>
+        <div class="detail-row"><span class="detail-label">Warehouse:</span><span class="detail-value">{{ selectedRecord.warehouse }}</span></div>
+        <div class="detail-row"><span class="detail-label">Unit Price:</span><span class="detail-value">{{ selectedRecord.unitPrice }}</span></div>
+        <div class="detail-row"><span class="detail-label">Total Value:</span><span class="detail-value"><strong>{{ selectedRecord.value }}</strong></span></div>
+        <div class="detail-row"><span class="detail-label">Status:</span><span class="detail-value"><span class="status-badge" [ngClass]="selectedRecord.statusClass">{{ selectedRecord.status }}</span></span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="closeViewModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Production Modal -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Production Record</h2>
+      <button class="modal-close" (click)="closeEditModal()">×</button>
+    </div>
+    <div class="modal-body" *ngIf="editingRecord">
+      <form>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editCropInput">Crop Type *</label>
+            <select id="editCropInput" [(ngModel)]="editingRecord.productName" name="editCropType" required class="form-input" (ngModelChange)="onEditFormChange()">
+              <option value="COCOA">Cocoa</option>
+              <option value="COFFEE">Coffee</option>
+              <option value="MAIZE">Maize</option>
+              <option value="CASSAVA">Cassava</option>
+              <option value="RICE">Rice</option>
+              <option value="COTTON">Cotton</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editQuantityInput">Quantity *</label>
+            <input type="number" id="editQuantityInput" [(ngModel)]="editingRecord.quantity" name="editQuantity" min="0.1" step="0.1" required class="form-input" placeholder="e.g., 2.5" (ngModelChange)="onEditFormChange()" />
+          </div>
+          <div class="form-group">
+            <label for="editUnitInput">Unit *</label>
+            <select id="editUnitInput" [(ngModel)]="editingRecord.unit" name="editUnit" required class="form-input" (ngModelChange)="onEditFormChange()">
+              <option *ngFor="let unit of availableUnits" [value]="unit">{{ unit }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editGradeInput">Quality Grade *</label>
+            <select id="editGradeInput" [(ngModel)]="editingRecord.qualityGrade" name="editQualityGrade" required class="form-input" (ngModelChange)="onEditFormChange()">
+              <option value="GRADE_A">Grade A</option>
+              <option value="GRADE_B">Grade B</option>
+              <option value="GRADE_C">Grade C</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editMaturityStatusInput">Maturity Status *</label>
+            <select id="editMaturityStatusInput" [(ngModel)]="editingRecord.maturityStatus" name="editMaturityStatus" required class="form-input">
+              <option *ngFor="let status of maturityStatuses" [value]="status.value" [title]="status.description">{{ status.label }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editWarehouseInput">Warehouse *</label>
+            <select id="editWarehouseInput" [(ngModel)]="editingRecord.warehouse" name="editWarehouse" required class="form-input">
+              <option *ngFor="let warehouse of warehouses" [value]="warehouse">{{ warehouse }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="editDateInput">Delivery Date *</label>
+            <input type="date" id="editDateInput" [(ngModel)]="editingRecord.productionDate" name="editDeliveryDate" required class="form-input" />
+          </div>
+        </div>
+        <div class="price-info-section">
+          <div class="price-info-card">
+            <div class="price-row">
+              <span class="price-label">Unit Price (per {{ editingRecord.unit || 'MT' }}):</span>
+              <span class="price-value">{{ formatValue(editingRecord.unitPrice) }}</span>
+            </div>
+            <div class="price-row total">
+              <span class="price-label">Total Value:</span>
+              <span class="price-value-total">{{ formatValue(editingRecord.valueXaf) }}</span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="submitEdit()" [disabled]="!isEditFormValid()">Update Production</button>
+    </div>
+  </div>
+</div>

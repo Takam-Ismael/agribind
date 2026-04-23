@@ -1,0 +1,527 @@
+<div class="page-content">
+      <!-- User Info Header - Top of Page -->
+      <div class="user-header-top">
+        <div class="user-info">
+          <div class="user-avatar">
+            <span class="avatar-text">{{ user.initials }}</span>
+          </div>
+          <div class="user-details">
+            <span class="user-name">{{ user.name }}</span>
+            <span class="user-role">{{ user.role }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-header-section">
+      <div class="header-content">
+        <div>
+          <h2>Microcredit Management</h2>
+          <p class="page-description">Manage loans, track repayments, and monitor credit activities</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" (click)="newLoan()">
+            <span class="icon">➕</span>
+            New Loan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of loanStats">
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-title">{{ stat.title }}</p>
+            <h2 class="stat-value">{{ stat.value }}</h2>
+            <p class="stat-change text-success">{{ stat.change }}</p>
+          </div>
+          <div class="stat-icon" [ngClass]="stat.color">
+            <span>{{ stat.icon }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters-card">
+      <div class="filters-content">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by loan ID or borrower..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearchChange()"
+          />
+        </div>
+        <select class="filter-select" [(ngModel)]="selectedStatus" (ngModelChange)="onStatusChange()">
+          <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Loan ID</th>
+              <th>Borrower</th>
+              <th>Amount</th>
+              <th>Interest Rate</th>
+              <th>Duration</th>
+              <th>Start Date</th>
+              <th>Due Date</th>
+              <th>Amount Paid</th>
+              <th>Amount Remaining</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let loan of paginatedLoans">
+              <td>{{ loan.id }}</td>
+              <td>
+                <div class="cell-content">
+                  <span class="cell-icon">👤</span>
+                  <span>{{ loan.borrower }}</span>
+                </div>
+              </td>
+              <td>{{ loan.amount }}</td>
+              <td>{{ loan.interestRate }}</td>
+              <td>{{ loan.duration }}</td>
+              <td>
+                <div class="cell-content">
+                  <span class="cell-icon">📅</span>
+                  <span>{{ loan.startDate }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="cell-content">
+                  <span class="cell-icon">📅</span>
+                  <span>{{ loan.dueDate }}</span>
+                </div>
+              </td>
+              <td class="text-success">{{ loan.amountPaid }}</td>
+              <td class="text-danger">{{ loan.amountRemaining }}</td>
+              <td>
+                <span class="badge badge-outline" [ngClass]="getStatusColor(loan.status)">
+                  {{ loan.status }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-action btn-view" (click)="viewLoan(loan)" title="View Details">👁️</button>
+                  <button class="btn-action btn-edit" (click)="editLoan(loan)" title="Edit Loan">✏️</button>
+                  <button class="btn-action btn-delete" (click)="deleteLoan(loan)" title="Delete Loan">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedLoans.length === 0">
+              <td colspan="11" class="no-data">No loans found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination-wrapper" *ngIf="totalPages > 1">
+        <nav class="pagination" aria-label="pagination">
+          <ul class="pagination-content">
+            <li class="pagination-item">
+              <button 
+                class="pagination-link pagination-previous" 
+                (click)="previousPage()"
+                [disabled]="currentPage === 1"
+                [class.disabled]="currentPage === 1">
+                <span>‹</span>
+                <span class="pagination-text">Previous</span>
+              </button>
+            </li>
+            
+            <li class="pagination-item" *ngFor="let page of getPageNumbers()">
+              <button 
+                class="pagination-link" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            </li>
+            
+            <li class="pagination-item">
+              <button 
+                class="pagination-link pagination-next" 
+                (click)="nextPage()"
+                [disabled]="currentPage === totalPages"
+                [class.disabled]="currentPage === totalPages">
+                <span class="pagination-text">Next</span>
+                <span>›</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        <div class="pagination-info">
+          Showing {{ getPaginationStart() }} to {{ getPaginationEnd() }} of {{ getTotalItems() }} loans
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- New Loan Modal -->
+<div class="modal-overlay" *ngIf="showNewLoanModal" (click)="closeNewLoanModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Apply for New Loan</h2>
+      <button class="modal-close" (click)="closeNewLoanModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form class="loan-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="borrower">Borrower Name *</label>
+            <input
+              type="text"
+              id="borrower"
+              [(ngModel)]="loanForm.borrower"
+              name="borrower"
+              class="form-input"
+              placeholder="Enter borrower's full name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="amount">Loan Amount (XAF) *</label>
+            <input
+              type="number"
+              id="amount"
+              [(ngModel)]="loanForm.amount"
+              name="amount"
+              class="form-input"
+              placeholder="50000"
+              min="1000"
+              step="1000"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="interestRate">Interest Rate (%)</label>
+            <input
+              type="number"
+              id="interestRate"
+              [(ngModel)]="loanForm.interestRate"
+              name="interestRate"
+              class="form-input"
+              placeholder="5.0"
+              min="0"
+              max="50"
+              step="0.1"
+            />
+          </div>
+          <div class="form-group">
+            <label for="duration">Duration (months)</label>
+            <input
+              type="number"
+              id="duration"
+              [(ngModel)]="loanForm.duration"
+              name="duration"
+              class="form-input"
+              placeholder="12"
+              min="1"
+              max="60"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate">Start Date *</label>
+            <input
+              type="date"
+              id="startDate"
+              [(ngModel)]="loanForm.startDate"
+              name="startDate"
+              class="form-input"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="dueDate">Due Date *</label>
+            <input
+              type="date"
+              id="dueDate"
+              [(ngModel)]="loanForm.dueDate"
+              name="dueDate"
+              class="form-input"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="guarantor">Guarantor</label>
+            <input
+              type="text"
+              id="guarantor"
+              [(ngModel)]="loanForm.guarantor"
+              name="guarantor"
+              class="form-input"
+              placeholder="Guarantor name (optional)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="purpose">Loan Purpose</label>
+            <select
+              id="purpose"
+              [(ngModel)]="loanForm.purpose"
+              name="purpose"
+              class="form-input"
+            >
+              <option value="">Select purpose</option>
+              <option value="Agriculture">Agriculture</option>
+              <option value="Equipment">Equipment Purchase</option>
+              <option value="Working Capital">Working Capital</option>
+              <option value="Housing">Housing</option>
+              <option value="Education">Education</option>
+              <option value="Medical">Medical</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="collateral">Collateral/Security</label>
+          <textarea
+            id="collateral"
+            [(ngModel)]="loanForm.collateral"
+            name="collateral"
+            class="form-textarea"
+            placeholder="Describe any collateral or security for the loan"
+            rows="3"
+          ></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeNewLoanModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="submitLoan()">Submit Loan Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Loan Modal -->
+<div class="modal-overlay" *ngIf="showEditLoanModal && selectedLoan" (click)="closeEditLoanModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Loan</h2>
+      <button class="modal-close" (click)="closeEditLoanModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form class="loan-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editBorrower">Borrower Name *</label>
+            <input
+              type="text"
+              id="editBorrower"
+              [(ngModel)]="loanForm.borrower"
+              name="editBorrower"
+              class="form-input"
+              placeholder="Enter borrower's full name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="editAmount">Loan Amount (XAF) *</label>
+            <input
+              type="number"
+              id="editAmount"
+              [(ngModel)]="loanForm.amount"
+              name="editAmount"
+              class="form-input"
+              placeholder="50000"
+              min="1000"
+              step="1000"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editInterestRate">Interest Rate (%)</label>
+            <input
+              type="number"
+              id="editInterestRate"
+              [(ngModel)]="loanForm.interestRate"
+              name="editInterestRate"
+              class="form-input"
+              placeholder="5.0"
+              min="0"
+              max="50"
+              step="0.1"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editDuration">Duration (months)</label>
+            <input
+              type="number"
+              id="editDuration"
+              [(ngModel)]="loanForm.duration"
+              name="editDuration"
+              class="form-input"
+              placeholder="12"
+              min="1"
+              max="60"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editStartDate">Start Date *</label>
+            <input
+              type="date"
+              id="editStartDate"
+              [(ngModel)]="loanForm.startDate"
+              name="editStartDate"
+              class="form-input"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="editDueDate">Due Date *</label>
+            <input
+              type="date"
+              id="editDueDate"
+              [(ngModel)]="loanForm.dueDate"
+              name="editDueDate"
+              class="form-input"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editGuarantor">Guarantor</label>
+            <input
+              type="text"
+              id="editGuarantor"
+              [(ngModel)]="loanForm.guarantor"
+              name="editGuarantor"
+              class="form-input"
+              placeholder="Guarantor name (optional)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editPurpose">Loan Purpose</label>
+            <select
+              id="editPurpose"
+              [(ngModel)]="loanForm.purpose"
+              name="editPurpose"
+              class="form-input"
+            >
+              <option value="">Select purpose</option>
+              <option value="Agriculture">Agriculture</option>
+              <option value="Equipment">Equipment Purchase</option>
+              <option value="Working Capital">Working Capital</option>
+              <option value="Housing">Housing</option>
+              <option value="Education">Education</option>
+              <option value="Medical">Medical</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editCollateral">Collateral/Security</label>
+          <textarea
+            id="editCollateral"
+            [(ngModel)]="loanForm.collateral"
+            name="editCollateral"
+            class="form-textarea"
+            placeholder="Describe any collateral or security for the loan"
+            rows="3"
+          ></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeEditLoanModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="updateLoan()">Update Loan</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Loan Modal -->
+<div class="modal-overlay" *ngIf="showViewLoanModal && selectedLoan" (click)="closeViewLoanModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Loan Details</h2>
+      <button class="modal-close" (click)="closeViewLoanModal()">×</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedLoan">
+      <div class="loan-details">
+        <div class="detail-section">
+          <div class="detail-row">
+            <span class="detail-label">Loan ID:</span>
+            <span class="detail-value">{{ selectedLoan.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Borrower:</span>
+            <span class="detail-value">{{ selectedLoan.borrower }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Loan Amount:</span>
+            <span class="detail-value">{{ selectedLoan.amount }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Interest Rate:</span>
+            <span class="detail-value">{{ selectedLoan.interestRate }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration:</span>
+            <span class="detail-value">{{ selectedLoan.duration }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Start Date:</span>
+            <span class="detail-value">{{ selectedLoan.startDate }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Due Date:</span>
+            <span class="detail-value">{{ selectedLoan.dueDate }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount Paid:</span>
+            <span class="detail-value text-success">{{ selectedLoan.amountPaid }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount Remaining:</span>
+            <span class="detail-value text-danger">{{ selectedLoan.amountRemaining }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">
+              <span class="badge badge-outline" [ngClass]="getStatusColor(selectedLoan.status)">
+                {{ selectedLoan.status }}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeViewLoanModal()">Close</button>
+    </div>
+  </div>
+</div>

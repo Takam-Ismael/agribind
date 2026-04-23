@@ -1,0 +1,663 @@
+<div class="pm-container" [class.animated-in]="animatedIn">
+
+  <!-- ── Filters ── -->
+  <div class="pm-card filter-card stagger-1">
+    <div class="filter-row">
+      <div class="filter-group">
+        <span class="filter-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+        </span>
+        <select class="pm-select" [(ngModel)]="selectedRegion" (ngModelChange)="onFilterChange()">
+          <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </span>
+        <select class="pm-select" [(ngModel)]="selectedCrop" (ngModelChange)="onFilterChange()">
+          <option *ngFor="let c of crops" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+      <div class="filter-tags">
+        <span class="filter-tag" *ngIf="selectedRegion !== 'All Regions'">
+          📍 {{ selectedRegion }}
+          <button class="tag-clear" (click)="selectedRegion='All Regions'; onFilterChange()">×</button>
+        </span>
+        <span class="filter-tag" *ngIf="selectedCrop !== 'All Crops'">
+          🌿 {{ selectedCrop }}
+          <button class="tag-clear" (click)="selectedCrop='All Crops'; onFilterChange()">×</button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Environmental Conditions ── -->
+  <div class="pm-card stagger-2">
+    <div class="card-header">
+      <span class="card-header-icon sun-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Environmental Conditions</h3>
+    </div>
+    <div class="weather-grid">
+      <div class="weather-card" *ngFor="let metric of weatherMetrics; let i = index" [style.animation-delay]="(i * 80) + 'ms'">
+        <div class="weather-top">
+          <ng-container *ngIf="metric.icon === 'thermometer'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" [attr.stroke]="metric.status === 'optimal' ? '#16a34a' : '#2563eb'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+            </svg>
+          </ng-container>
+          <ng-container *ngIf="metric.icon === 'droplets'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" [attr.stroke]="metric.status === 'good' ? '#2563eb' : '#16a34a'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/>
+              <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>
+            </svg>
+          </ng-container>
+          <ng-container *ngIf="metric.icon === 'sun'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" [attr.stroke]="metric.status === 'optimal' ? '#16a34a' : '#2563eb'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+            </svg>
+          </ng-container>
+          <ng-container *ngIf="metric.icon === 'leaf'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" [attr.stroke]="metric.status === 'good' ? '#2563eb' : '#16a34a'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+            </svg>
+          </ng-container>
+          <span class="weather-badge" [ngClass]="getWeatherStatusClass(metric.status)">{{ metric.status }}</span>
+        </div>
+        <div class="weather-value">{{ metric.value }}</div>
+        <div class="weather-title">{{ metric.title }}</div>
+        <div class="weather-desc">{{ metric.description }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Production Charts Row ── -->
+  <div class="charts-row">
+
+    <!-- Line Chart -->
+    <div class="pm-card chart-card-wide stagger-3">
+      <div class="card-header">
+        <span class="card-header-icon trend-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+          </svg>
+        </span>
+        <h3 class="card-title">Production Trends (Tonnes)</h3>
+        <span class="chart-subtitle" *ngIf="selectedRegion !== 'All Regions' || selectedCrop !== 'All Crops'">
+          — filtered view
+        </span>
+      </div>
+
+      <div class="chart-legend">
+        <span class="legend-item" *ngFor="let key of visibleCropKeys">
+          <span class="legend-dot" [style.background]="cropColor(key)"></span>{{ cropName(key) }}
+        </span>
+      </div>
+
+      <div class="svg-chart-wrapper">
+        <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + (chartHeight + 10)" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">
+
+          <!-- Grid lines -->
+          <g class="grid-lines">
+            <line *ngFor="let label of getYAxisLabels(); let i = index"
+              [attr.x1]="chartPaddingLeft" [attr.y1]="chartPaddingTop + (i * (chartHeight - chartPaddingBottom - chartPaddingTop) / 4)"
+              [attr.x2]="chartWidth - 20"  [attr.y2]="chartPaddingTop + (i * (chartHeight - chartPaddingBottom - chartPaddingTop) / 4)"
+              stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+            <text *ngFor="let label of getYAxisLabels(); let i = index"
+              [attr.x]="chartPaddingLeft - 6"
+              [attr.y]="chartPaddingTop + (i * (chartHeight - chartPaddingBottom - chartPaddingTop) / 4) + 4"
+              text-anchor="end" font-size="10" fill="#9ca3af">{{ label / 1000 }}k</text>
+          </g>
+
+          <!-- Area fill (cocoa only for context) -->
+          <polygon *ngIf="visibleCropKeys.includes('cocoa')"
+            [attr.points]="getAreaPoints('cocoa')" fill="#8B4513" opacity="0.06"/>
+
+          <!-- Animated lines using stroke-dasharray trick -->
+          <ng-container *ngFor="let key of visibleCropKeys">
+            <polyline
+              [attr.points]="getLinePoints(key)"
+              fill="none"
+              [attr.stroke]="cropColor(key)"
+              stroke-width="2.5"
+              stroke-linejoin="round"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="getPathLength(key)"
+              [attr.stroke-dashoffset]="getDashOffset(key)"/>
+          </ng-container>
+
+          <!-- Dots fade in after line draws -->
+          <ng-container *ngFor="let key of visibleCropKeys">
+            <circle *ngFor="let dot of getDotPositions(key)"
+              [attr.cx]="dot.x" [attr.cy]="dot.y" r="4"
+              fill="white" [attr.stroke]="cropColor(key)" stroke-width="2"
+              [style.opacity]="lineProgress"/>
+          </ng-container>
+
+          <!-- X axis labels -->
+          <text *ngFor="let label of getXLabels(); let i = index"
+            [attr.x]="getXLabelPositions()[i]" [attr.y]="chartHeight - 5"
+            text-anchor="middle" font-size="11" fill="#9ca3af">{{ label }}</text>
+
+          <!-- Hover zones -->
+          <rect *ngFor="let d of productionData; let i = index"
+            [attr.x]="getXLabelPositions()[i] - 22"
+            [attr.y]="chartPaddingTop"
+            width="44"
+            [attr.height]="chartHeight - chartPaddingBottom - chartPaddingTop"
+            fill="transparent"
+            style="cursor:crosshair"
+            (mouseenter)="showLineTooltip(i, $event)"
+            (mouseleave)="hideLineTooltip()"/>
+        </svg>
+
+        <!-- Line chart tooltip - now dynamic for all crops -->
+        <div class="chart-tooltip" *ngIf="lineTooltip.visible"
+          [style.left.px]="lineTooltip.x" [style.top.px]="lineTooltip.y">
+          <div class="ct-month">{{ lineTooltip.month }}</div>
+          <ng-container *ngFor="let key of visibleCropKeys">
+            <div class="ct-row">
+              <span class="ct-dot" [style.background]="cropColor(key)"></span>
+              <span>{{ cropName(key) }}</span>
+              <span class="ct-val">{{ lineTooltip[key] | number }}</span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie / Donut Chart -->
+    <div class="pm-card chart-card-narrow stagger-4">
+      <div class="card-header">
+        <span class="card-header-icon bar-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </span>
+        <h3 class="card-title">Crop Distribution</h3>
+      </div>
+      <div class="pie-wrapper">
+        <svg viewBox="0 0 240 240" class="pie-svg">
+          <g *ngFor="let seg of getPieSegments()">
+            <path *ngIf="seg.path" [attr.d]="seg.path" [attr.fill]="seg.color" class="pie-segment"
+              (mouseenter)="showPieTooltip(seg, $event)"
+              (mouseleave)="hidePieTooltip()"/>
+          </g>
+          <!-- Centre label -->
+          <text x="120" y="115" text-anchor="middle" font-size="13" font-weight="700" fill="#374151">Crops</text>
+          <text x="120" y="132" text-anchor="middle" font-size="11" fill="#9ca3af">Distribution</text>
+        </svg>
+        <!-- Pie tooltip -->
+        <div class="chart-tooltip" *ngIf="pieTooltip.visible"
+          [style.left.px]="pieTooltip.x" [style.top.px]="pieTooltip.y">
+          <div class="ct-month">{{ pieTooltip.name }}</div>
+          <div class="ct-row"><span class="ct-val">{{ pieTooltip.value }}%</span></div>
+        </div>
+      </div>
+      <div class="pie-legend">
+        <div class="pie-legend-item" *ngFor="let crop of cropDistribution">
+          <div class="pie-legend-left">
+            <span class="pie-dot" [style.background]="crop.color"></span>
+            <span class="pie-name">{{ crop.name }}</span>
+          </div>
+          <span class="pie-pct">{{ crop.value }}%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Regional Performance ── -->
+  <div class="pm-card stagger-5">
+    <div class="card-header">
+      <span class="card-header-icon map-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Regional Performance Analysis</h3>
+      <span class="record-count">{{ regionPerformance.length }} region(s)</span>
+    </div>
+    <div class="regions-list">
+      <div class="region-item region-animate" *ngFor="let region of regionPerformance; let i = index"
+        [style.animation-delay]="(i * 60) + 'ms'">
+        <div class="region-header">
+          <span class="region-name">{{ region.name }} Region</span>
+          <span class="badge" [ngClass]="getStatusClass(region.status)">{{ formatStatusLabel(region.status) }}</span>
+        </div>
+        <div class="progress-grid">
+          <div class="progress-item">
+            <div class="progress-label">
+              <span>Production Target</span><span>{{ region.production }}%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" [style.width.%]="region.production * lineProgress"></div>
+            </div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-label">
+              <span>Efficiency</span><span>{{ region.efficiency }}%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" [style.width.%]="region.efficiency * lineProgress"></div>
+            </div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-label">
+              <span>Price Compliance</span><span>{{ region.compliance }}%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" [style.width.%]="region.compliance * lineProgress"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="no-data" *ngIf="regionPerformance.length === 0">
+        No region data matches the current filter.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Alerts ── -->
+  <div class="pm-card stagger-6">
+    <div class="card-header">
+      <span class="card-header-icon alert-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Active Alerts &amp; Notifications</h3>
+    </div>
+    <div class="alerts-list">
+      <div class="alert-item" *ngFor="let alert of alerts" [ngClass]="getAlertBorderClass(alert.severity)">
+        <div class="alert-icon-wrap">
+          <ng-container *ngIf="alert.type === 'warning'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </ng-container>
+          <ng-container *ngIf="alert.type === 'info'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </ng-container>
+          <ng-container *ngIf="alert.type === 'success'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </ng-container>
+        </div>
+        <div class="alert-body">
+          <div class="alert-title">{{ alert.title }}</div>
+          <div class="alert-desc">{{ alert.description }}</div>
+          <div class="alert-time">{{ alert.time }}</div>
+        </div>
+        <span class="alert-badge" [ngClass]="getAlertBadgeClass(alert.severity)">{{ alert.severity }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Crops by Region (Chart + Table) ── -->
+  <div class="pm-card stagger-7 crops-by-region-card">
+    <div class="card-header">
+      <span class="card-header-icon region-crop-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Crops by Region</h3>
+      <span class="chart-subtitle">Production volume (tonnes)</span>
+    </div>
+
+    <div class="view-toggle">
+      <button class="toggle-btn" [class.active]="cropsByRegionView === 'chart'" (click)="cropsByRegionView = 'chart'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Chart
+      </button>
+      <button class="toggle-btn" [class.active]="cropsByRegionView === 'table'" (click)="cropsByRegionView = 'table'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3h18v18H3zM3 9h18M9 21v-12"/>
+        </svg>
+        Table
+      </button>
+    </div>
+
+    <!-- Bar Chart View -->
+    <div class="crops-chart-wrapper" *ngIf="cropsByRegionView === 'chart'">
+      <div class="crops-chart-scroll">
+        <svg [attr.viewBox]="'0 0 ' + cropsChartWidth + ' ' + cropsChartHeight" class="crops-bar-chart" preserveAspectRatio="xMidYMid meet">
+          
+          <g class="grid-lines">
+            <line *ngFor="let label of getCropsYAxisLabels(); let i = index"
+              [attr.x1]="cropsChartPaddingLeft" 
+              [attr.y1]="cropsChartPaddingTop + (i * (cropsChartHeight - cropsChartPaddingBottom - cropsChartPaddingTop) / 4)"
+              [attr.x2]="cropsChartWidth - 20"  
+              [attr.y2]="cropsChartPaddingTop + (i * (cropsChartHeight - cropsChartPaddingBottom - cropsChartPaddingTop) / 4)"
+              stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+            <text *ngFor="let label of getCropsYAxisLabels(); let i = index"
+              [attr.x]="cropsChartPaddingLeft - 6"
+              [attr.y]="cropsChartPaddingTop + (i * (cropsChartHeight - cropsChartPaddingBottom - cropsChartPaddingTop) / 4) + 4"
+              text-anchor="end" font-size="10" fill="#9ca3af">{{ label / 1000 }}k</text>
+          </g>
+
+          <g *ngFor="let region of cropsByRegionData; let regionIdx = index">
+            <!-- Cocoa -->
+            <rect *ngIf="region.cocoa > 0"
+              [attr.x]="cropsChartPaddingLeft + (regionIdx * barGroupWidth) + barPadding"
+              [attr.y]="getBarY(region.cocoa)"
+              [attr.width]="barWidth"
+              [attr.height]="getBarHeight(region.cocoa)"
+              fill="#8B4513"
+              [style.opacity]="cropsBarProgress"
+              class="bar-rect"
+              (mouseenter)="showCropsBarTooltip(region, 'cocoa', $event)"
+              (mouseleave)="hideCropsBarTooltip()"/>
+            <!-- Coffee -->
+            <rect *ngIf="region.coffee > 0"
+              [attr.x]="cropsChartPaddingLeft + (regionIdx * barGroupWidth) + barPadding + barWidth"
+              [attr.y]="getBarY(region.coffee)"
+              [attr.width]="barWidth"
+              [attr.height]="getBarHeight(region.coffee)"
+              fill="#6B4423"
+              [style.opacity]="cropsBarProgress"
+              class="bar-rect"
+              (mouseenter)="showCropsBarTooltip(region, 'coffee', $event)"
+              (mouseleave)="hideCropsBarTooltip()"/>
+            <!-- Palm Oil -->
+            <rect *ngIf="region.palmOil > 0"
+              [attr.x]="cropsChartPaddingLeft + (regionIdx * barGroupWidth) + barPadding + (barWidth * 2)"
+              [attr.y]="getBarY(region.palmOil)"
+              [attr.width]="barWidth"
+              [attr.height]="getBarHeight(region.palmOil)"
+              fill="#228B22"
+              [style.opacity]="cropsBarProgress"
+              class="bar-rect"
+              (mouseenter)="showCropsBarTooltip(region, 'palmOil', $event)"
+              (mouseleave)="hideCropsBarTooltip()"/>
+            <!-- Cotton -->
+            <rect *ngIf="region.cotton > 0"
+              [attr.x]="cropsChartPaddingLeft + (regionIdx * barGroupWidth) + barPadding + (barWidth * 3)"
+              [attr.y]="getBarY(region.cotton)"
+              [attr.width]="barWidth"
+              [attr.height]="getBarHeight(region.cotton)"
+              fill="#E09000"
+              [style.opacity]="cropsBarProgress"
+              class="bar-rect"
+              (mouseenter)="showCropsBarTooltip(region, 'cotton', $event)"
+              (mouseleave)="hideCropsBarTooltip()"/>
+            <!-- Cassava -->
+            <rect *ngIf="region.cassava > 0"
+              [attr.x]="cropsChartPaddingLeft + (regionIdx * barGroupWidth) + barPadding + (barWidth * 4)"
+              [attr.y]="getBarY(region.cassava)"
+              [attr.width]="barWidth"
+              [attr.height]="getBarHeight(region.cassava)"
+              fill="#B8860B"
+              [style.opacity]="cropsBarProgress"
+              class="bar-rect"
+              (mouseenter)="showCropsBarTooltip(region, 'cassava', $event)"
+              (mouseleave)="hideCropsBarTooltip()"/>
+            <!-- Maize -->
+            <rect *ngIf="region.maize > 0"
+              [attr.x]="cropsChartPaddingLeft + (regionIdx * barGroupWidth) + barPadding + (barWidth * 5)"
+              [attr.y]="getBarY(region.maize)"
+              [attr.width]="barWidth"
+              [attr.height]="getBarHeight(region.maize)"
+              fill="#DAA520"
+              [style.opacity]="cropsBarProgress"
+              class="bar-rect"
+              (mouseenter)="showCropsBarTooltip(region, 'maize', $event)"
+              (mouseleave)="hideCropsBarTooltip()"/>
+          </g>
+
+          <text *ngFor="let region of cropsByRegionData; let i = index"
+            [attr.x]="cropsChartPaddingLeft + (i * barGroupWidth) + (barGroupWidth / 2)"
+            [attr.y]="cropsChartHeight - 8"
+            text-anchor="middle" font-size="10" fill="#6b7280" font-weight="500">{{ region.name }}</text>
+        </svg>
+      </div>
+      
+      <div class="bar-legend">
+        <span class="legend-item"><span class="legend-dot" style="background: #8B4513"></span>Cocoa</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #6B4423"></span>Coffee</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #228B22"></span>Palm Oil</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #E09000"></span>Cotton</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #B8860B"></span>Cassava</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #DAA520"></span>Maize</span>
+      </div>
+
+      <div class="chart-tooltip" *ngIf="cropsBarTooltip.visible"
+        [style.left.px]="cropsBarTooltip.x" [style.top.px]="cropsBarTooltip.y">
+        <div class="ct-month">{{ cropsBarTooltip.region }} - {{ cropsBarTooltip.cropName }}</div>
+        <div class="ct-row"><span class="ct-val">{{ cropsBarTooltip.value | number }} tonnes</span></div>
+      </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="crops-table-wrapper" *ngIf="cropsByRegionView === 'table'">
+      <table class="crops-region-table">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th>Cocoa (tonnes)</th>
+            <th>Coffee (tonnes)</th>
+            <th>Palm Oil (tonnes)</th>
+            <th>Cotton (tonnes)</th>
+            <th>Cassava (tonnes)</th>
+            <th>Maize (tonnes)</th>
+            <th>Total (tonnes)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let region of cropsByRegionData">
+            <td class="region-name-cell">{{ region.name }}</td>
+            <td [class.highlight]="region.cocoa > 0">{{ region.cocoa | number }}</td>
+            <td [class.highlight]="region.coffee > 0">{{ region.coffee | number }}</td>
+            <td [class.highlight]="region.palmOil > 0">{{ region.palmOil | number }}</td>
+            <td [class.highlight]="region.cotton > 0">{{ region.cotton | number }}</td>
+            <td [class.highlight]="region.cassava > 0">{{ region.cassava | number }}</td>
+            <td [class.highlight]="region.maize > 0">{{ region.maize | number }}</td>
+            <td class="total-cell">{{ region.total | number }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td>Total</td>
+            <td>{{ getCropTotal('cocoa') | number }}</td>
+            <td>{{ getCropTotal('coffee') | number }}</td>
+            <td>{{ getCropTotal('palmOil') | number }}</td>
+            <td>{{ getCropTotal('cotton') | number }}</td>
+            <td>{{ getCropTotal('cassava') | number }}</td>
+            <td>{{ getCropTotal('maize') | number }}</td>
+            <td>{{ getGrandTotal() | number }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Crops by Farmers (Chart + Table) ── -->
+  <div class="pm-card stagger-8 crops-by-farmers-card">
+    <div class="card-header">
+      <span class="card-header-icon farmers-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </span>
+      <h3 class="card-title">Crops by Farmers</h3>
+      <span class="chart-subtitle">Number of farmers per crop</span>
+    </div>
+
+    <div class="view-toggle">
+      <button class="toggle-btn" [class.active]="cropsByFarmersView === 'chart'" (click)="cropsByFarmersView = 'chart'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Chart
+      </button>
+      <button class="toggle-btn" [class.active]="cropsByFarmersView === 'table'" (click)="cropsByFarmersView = 'table'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3h18v18H3zM3 9h18M9 21v-12"/>
+        </svg>
+        Table
+      </button>
+    </div>
+
+    <!-- Bar Chart View -->
+    <div class="farmers-chart-wrapper" *ngIf="cropsByFarmersView === 'chart'">
+      <div class="farmers-chart-scroll">
+        <svg [attr.viewBox]="'0 0 ' + farmersChartWidth + ' ' + farmersChartHeight" class="farmers-bar-chart" preserveAspectRatio="xMidYMid meet">
+          
+          <g class="grid-lines">
+            <line *ngFor="let label of getFarmersYAxisLabels(); let i = index"
+              [attr.x1]="farmersChartPaddingLeft" 
+              [attr.y1]="farmersChartPaddingTop + (i * (farmersChartHeight - farmersChartPaddingBottom - farmersChartPaddingTop) / 4)"
+              [attr.x2]="farmersChartWidth - 20"  
+              [attr.y2]="farmersChartPaddingTop + (i * (farmersChartHeight - farmersChartPaddingBottom - farmersChartPaddingTop) / 4)"
+              stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+            <text *ngFor="let label of getFarmersYAxisLabels(); let i = index"
+              [attr.x]="farmersChartPaddingLeft - 6"
+              [attr.y]="farmersChartPaddingTop + (i * (farmersChartHeight - farmersChartPaddingBottom - farmersChartPaddingTop) / 4) + 4"
+              text-anchor="end" font-size="10" fill="#9ca3af">{{ label / 1000 }}k</text>
+          </g>
+
+          <g *ngFor="let crop of cropsByFarmersData; let cropIdx = index">
+            <rect
+              [attr.x]="farmersChartPaddingLeft + (cropIdx * farmersBarGroupWidth) + farmersBarPadding"
+              [attr.y]="getFarmersBarY(crop.totalFarmers)"
+              [attr.width]="farmersBarWidth"
+              [attr.height]="getFarmersBarHeight(crop.totalFarmers)"
+              [attr.fill]="crop.color"
+              [style.opacity]="farmersBarProgress"
+              class="bar-rect"
+              (mouseenter)="showFarmersBarTooltip(crop, $event)"
+              (mouseleave)="hideFarmersBarTooltip()"/>
+          </g>
+
+          <text *ngFor="let crop of cropsByFarmersData; let i = index"
+            [attr.x]="farmersChartPaddingLeft + (i * farmersBarGroupWidth) + (farmersBarGroupWidth / 2)"
+            [attr.y]="farmersChartHeight - 8"
+            text-anchor="middle" font-size="10" fill="#6b7280" font-weight="500">{{ crop.cropName }}</text>
+        </svg>
+      </div>
+      
+      <div class="bar-legend">
+        <span class="legend-item" *ngFor="let crop of farmersLegend">
+          <span class="legend-dot" [style.background]="crop.color"></span>{{ crop.name }}
+        </span>
+      </div>
+
+      <div class="chart-tooltip" *ngIf="farmersBarTooltip.visible"
+        [style.left.px]="farmersBarTooltip.x" [style.top.px]="farmersBarTooltip.y">
+        <div class="ct-month">{{ farmersBarTooltip.cropName }}</div>
+        <div class="ct-row"><span class="ct-val">{{ farmersBarTooltip.totalFarmers | number }} farmers</span></div>
+        <div class="ct-row" *ngFor="let region of farmersBarTooltip.regions">
+          <span>{{ region.name }}:</span>
+          <span class="ct-val">{{ region.count | number }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="farmers-table-wrapper" *ngIf="cropsByFarmersView === 'table'">
+      <table class="farmers-region-table">
+        <thead>
+          <tr>
+            <th>Crop</th>
+            <th>Total Farmers</th>
+            <th *ngFor="let region of farmerRegions">{{ region }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let crop of cropsByFarmersData">
+            <td class="crop-name-cell">
+              <span class="crop-dot" [style.background]="crop.color"></span>
+              {{ crop.cropName }}
+            </td>
+            <td class="total-farmers-cell">{{ crop.totalFarmers | number }}</td>
+            <td *ngFor="let region of farmerRegions">{{ getFarmersByRegion(crop.cropName, region) | number }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td>Total</td>
+            <td>{{ getTotalFarmersAll() | number }}</td>
+            <td *ngFor="let region of farmerRegions">{{ getTotalFarmersByRegion(region) | number }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Quick Stats ── -->
+  <div class="stats-grid stagger-9">
+    <div class="stat-card stat-green">
+      <div class="stat-inner">
+        <div>
+          <div class="stat-label">Total Production</div>
+          <div class="stat-value">2.8M tonnes</div>
+        </div>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+        </svg>
+      </div>
+      <div class="stat-sub">+12% from last quarter</div>
+    </div>
+    <div class="stat-card stat-blue">
+      <div class="stat-inner">
+        <div>
+          <div class="stat-label">Active Farms</div>
+          <div class="stat-value">45,672</div>
+        </div>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <div class="stat-sub">Across all regions</div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-inner">
+        <div>
+          <div class="stat-label">Yield Efficiency</div>
+          <div class="stat-value">87%</div>
+        </div>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </div>
+      <div class="stat-sub">Above target threshold</div>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-inner">
+        <div>
+          <div class="stat-label">Active Alerts</div>
+          <div class="stat-value">12</div>
+        </div>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="stat-sub">Requiring attention</div>
+    </div>
+  </div>
+
+</div>

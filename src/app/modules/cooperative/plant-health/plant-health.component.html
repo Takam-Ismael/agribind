@@ -1,0 +1,835 @@
+<div class="main-content">
+  <div class="page-content">
+
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="spinner"></div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage && !isLoading" class="alert alert-error">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Plant Health Monitoring</h1>
+        <p class="page-description">Track disease reports, manage treatments, and monitor crop health across your cooperative</p>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar">
+          <span class="avatar-text">{{ user.initials }}</span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ healthStats.length > 0 ? healthStats[0].value : '0' }}</h3>
+          <p class="stat-label">Active Cases</p>
+          <p class="stat-trend warning">{{ healthStats.length > 0 ? healthStats[0].change : '0 critical' }}</p>
+        </div>
+        <div class="stat-icon yellow">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ healthStats.length > 1 ? healthStats[1].value : '0' }}</h3>
+          <p class="stat-label">Resolved Cases</p>
+          <p class="stat-trend positive">{{ healthStats.length > 1 ? healthStats[1].change : '+0 this month' }}</p>
+        </div>
+        <div class="stat-icon green">
+          <i class="fas fa-check-circle"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ healthStats.length > 2 ? healthStats[2].value : '0' }}</h3>
+          <p class="stat-label">Total Reports</p>
+          <p class="stat-trend positive">{{ healthStats.length > 2 ? healthStats[2].change : 'All time' }}</p>
+        </div>
+        <div class="stat-icon green">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>{{ healthStats.length > 3 ? healthStats[3].value : '0' }}</h3>
+          <p class="stat-label">Critical Alerts</p>
+          <p class="stat-trend danger">{{ healthStats.length > 3 ? healthStats[3].change : 'Immediate attention' }}</p>
+        </div>
+        <div class="stat-icon red">
+          <i class="fas fa-radiation-alt"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input
+          type="text"
+          placeholder="Search by farmer, disease, or location..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+        />
+      </div>
+      <div class="button-group">
+        <button class="btn-primary" (click)="openReportModal()">
+          <i class="fas fa-plus"></i> Report Disease
+        </button>
+        <button class="btn-outline" (click)="exportReports()">
+          <i class="fas fa-download"></i> Export
+          <i class="fas fa-chevron-down" style="font-size:11px;margin-left:2px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label><i class="fas fa-seedling"></i> Crop</label>
+        <select [(ngModel)]="selectedCrop" (change)="onCropChange()">
+          <option *ngFor="let crop of crops" [value]="crop.value">{{ crop.label }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label><i class="fas fa-thermometer-half"></i> Severity</label>
+        <select [(ngModel)]="selectedSeverity" (change)="onSeverityChange()">
+          <option *ngFor="let severity of severities" [value]="severity.value">{{ severity.label }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label><i class="fas fa-layer-group"></i> Report Status</label>
+        <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+          <option value="all">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="UNDER_REVIEW">Under Review</option>
+          <option value="TREATED">Treated</option>
+          <option value="RESOLVED">Resolved</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabs Bar -->
+    <div class="tabs-bar">
+      <button class="tab-btn" [class.active]="activeStatusTab === 'all'" (click)="switchStatusTab('all')">
+        <i class="fas fa-list"></i> All Reports
+      </button>
+      <button class="tab-btn" [class.active]="activeStatusTab === 'active'" (click)="switchStatusTab('active')">
+        <i class="fas fa-exclamation-circle"></i> Active Cases
+      </button>
+      <button class="tab-btn" [class.active]="activeStatusTab === 'under_review'" (click)="switchStatusTab('under_review')">
+        <i class="fas fa-clock"></i> Under Review
+      </button>
+      <button class="tab-btn" [class.active]="activeStatusTab === 'resolved'" (click)="switchStatusTab('resolved')">
+        <i class="fas fa-check-double"></i> Resolved
+      </button>
+    </div>
+
+    <!-- Disease Reports Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> Report ID</th>
+          <th><i class="fas fa-user"></i> Farmer</th>
+          <th><i class="fas fa-seedling"></i> Crop</th>
+          <th><i class="fas fa-bug"></i> Disease</th>
+          <th><i class="fas fa-map-marker-alt"></i> Location</th>
+          <th><i class="fas fa-ruler-combined"></i> Affected Area</th>
+          <th><i class="fas fa-thermometer-half"></i> Severity</th>
+          <th><i class="fas fa-circle"></i> Status</th>
+          <th><i class="fas fa-calendar-alt"></i> Date</th>
+          <th><i class="fas fa-cog"></i> Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let report of filteredDiseaseReports">
+          <td>
+            <div class="name-cell">
+              <span class="id-badge">{{ report.reportId }}</span>
+              <span *ngIf="report.photoPath" class="photo-indicator" title="Has photo">
+                  <i class="fas fa-camera"></i>
+                </span>
+            </div>
+          </td>
+          <td>
+            <div class="name-cell">
+              <div class="item-avatar">{{ (report.reportedBy || 'U').charAt(0) }}</div>
+              <span>{{ report.reportedBy || 'Unknown' }}</span>
+            </div>
+          </td>
+          <td><span class="crop-badge">{{ report.crop }}</span></td>
+          <td>{{ report.disease }}</td>
+          <td>
+            <div class="location-cell">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ report.location }}</span>
+            </div>
+          </td>
+          <td>{{ report.affectedArea }}</td>
+          <td>
+              <span class="status-badge" [ngClass]="getSeverityClass(report.severity)">
+                <i class="fas fa-circle"></i> {{ report.severity }}
+              </span>
+          </td>
+          <td>
+              <span class="status-badge" [ngClass]="getStatusClass(report.status)">
+                <i class="fas fa-circle"></i> {{ report.status }}
+              </span>
+          </td>
+          <td>
+            <div class="date-cell">
+              <i class="fas fa-calendar-alt"></i>
+              <span>{{ formatDate(report.reportDate) }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="view-btn" (click)="openViewReportModal(report)" title="View">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="edit-btn" (click)="openEditModal(report)" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="treat-btn" (click)="openTreatReportModal(report)" title="Treat">
+                <i class="fas fa-pills"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredDiseaseReports.length === 0 && !isLoading">
+          <td colspan="10" class="no-data">
+            <i class="fas fa-inbox"></i>
+            <p>No disease reports match the current filters.</p>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button (click)="previousPage()" [disabled]="currentPage === 0">&#8592; Prev</button>
+        <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+        <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">Next &#8594;</button>
+      </div>
+    </div>
+
+    <!-- ═══ Charts: Regional Disease Map + Disease Trends ═══ -->
+    <div class="charts-grid">
+
+      <!-- Regional Disease Map (Leaflet – centred on Cameroon) -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-icon-box">
+            <i class="fas fa-map-marked-alt chart-icon"></i>
+          </div>
+          <div>
+            <h3>Regional Disease Map</h3>
+            <p class="chart-subtitle">Active case spread across Cameroon's regions</p>
+          </div>
+        </div>
+
+        <div id="cameroon-disease-map" class="leaflet-map-container"></div>
+
+        <div class="map-legend">
+          <span class="legend-item legend-critical"><i class="fas fa-circle"></i> Critical</span>
+          <span class="legend-item legend-high"><i class="fas fa-circle"></i> High</span>
+          <span class="legend-item legend-medium"><i class="fas fa-circle"></i> Medium</span>
+          <span class="legend-item legend-low"><i class="fas fa-circle"></i> Low / Resolved</span>
+        </div>
+      </div>
+
+      <!-- Disease Trends Card -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-icon-box secondary">
+            <i class="fas fa-chart-line chart-icon"></i>
+          </div>
+          <div>
+            <h3>Disease Trends</h3>
+            <p class="chart-subtitle">Monthly spread patterns</p>
+          </div>
+        </div>
+
+        <div class="trends-content">
+          <div class="trend-item" *ngFor="let t of diseaseTrends">
+            <div class="trend-header">
+              <span class="trend-label">
+                {{ t.disease }} <span class="trend-crop">({{ t.crop }})</span>
+              </span>
+              <span class="trend-change"
+                    [class.negative]="t.direction === 'up'"
+                    [class.positive]="t.direction === 'down'">{{ t.change }}</span>
+            </div>
+            <div class="trend-bar">
+              <div class="trend-fill"
+                   [class.critical]="t.severity === 'CRITICAL'"
+                   [class.high]="t.severity === 'HIGH'"
+                   [class.medium]="t.severity === 'MEDIUM'"
+                   [class.low]="t.severity === 'LOW'"
+                   [style.width]="t.spreadPct + '%'"></div>
+            </div>
+            <p class="trend-meta">{{ t.farms }} farms &middot; {{ t.region }}</p>
+          </div>
+        </div>
+
+        <!-- Summary statistics table — driven by diseaseTrends data -->
+        <div class="trend-summary-table">
+          <table>
+            <thead>
+            <tr>
+              <th>Disease</th>
+              <th>Crop</th>
+              <th>Region(s)</th>
+              <th>Farms</th>
+              <th>Trend</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let t of diseaseTrends">
+              <td>{{ t.disease }}</td>
+              <td><span class="crop-badge">{{ t.crop }}</span></td>
+              <td>{{ t.region }}</td>
+              <td>{{ t.farms }}</td>
+              <td>
+                  <span class="status-badge"
+                        [class.severity-critical]="t.severity === 'CRITICAL'"
+                        [class.severity-high]="t.severity === 'HIGH'"
+                        [class.severity-medium]="t.severity === 'MEDIUM'"
+                        [class.severity-low]="t.severity === 'LOW'">
+                    <i class="fas"
+                       [class.fa-arrow-up]="t.direction === 'up'"
+                       [class.fa-arrow-down]="t.direction === 'down'"></i>
+                    {{ t.change }}
+                  </span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div><!-- /.charts-grid -->
+
+  </div><!-- /.page-content -->
+</div><!-- /.main-content -->
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- REPORT DISEASE MODAL                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showReportModal" (click)="closeReportModal()">
+  <div class="modal-content modal-add" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>Report Plant Disease</h2>
+        <p class="modal-description">Submit a new disease report for AI-powered detection and treatment recommendations</p>
+      </div>
+      <button class="modal-close" (click)="closeReportModal()">&#215;</button>
+    </div>
+
+    <div class="modal-body">
+      <form>
+        <div class="form-section">
+          <h3 class="section-title">Reporter &amp; Crop Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Farmer Name *</label>
+              <input type="text" [(ngModel)]="newReport.reportedBy" name="farmerName" class="form-input"
+                     placeholder="Enter farmer's full name" />
+            </div>
+            <div class="form-group">
+              <label>Crop Type *</label>
+              <select [(ngModel)]="newReport.crop" name="crop" class="form-input">
+                <option value="">Select crop</option>
+                <option *ngFor="let crop of cropOptions" [value]="crop">{{ crop }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Disease Details</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Disease Type *</label>
+              <select [(ngModel)]="newReport.disease" name="disease" class="form-input">
+                <option value="">Select disease</option>
+                <option *ngFor="let disease of diseaseOptions" [value]="disease">{{ disease }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Severity *</label>
+              <select [(ngModel)]="newReport.severity" name="severity" class="form-input">
+                <option value="">Select severity</option>
+                <option *ngFor="let s of severityOptions" [value]="s.value">{{ s.label }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Location &amp; Area</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Location *</label>
+              <input type="text" [(ngModel)]="newReport.location" name="location" class="form-input"
+                     placeholder="Enter location or use GPS" />
+            </div>
+            <div class="form-group">
+              <label>Affected Area (hectares) *</label>
+              <input type="text" [(ngModel)]="newReport.affectedArea" name="affectedArea" class="form-input"
+                     placeholder="e.g. 2.5" />
+            </div>
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn-gps" (click)="setLocation()">
+              <i class="fas fa-map-marker-alt"></i> Use GPS Location
+            </button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Notes &amp; Evidence</h3>
+          <div class="form-group">
+            <label>Description / Treatment Notes</label>
+            <textarea [(ngModel)]="newReport.treatmentNotes" name="treatmentNotes" class="form-textarea"
+                      placeholder="Describe symptoms, affected plants, any initial treatment, etc." rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Evidence Photos</label>
+
+            <!--
+              Mobile fallback: capture="environment" opens the rear camera on mobile.
+              On desktop, openCamera() uses getUserMedia for a live webcam preview.
+            -->
+            <input
+              id="mobileCameraInput"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              (change)="onFileSelected($event)"
+              style="display:none"
+            />
+
+            <!-- Gallery picker — always opens file manager (no capture attribute) -->
+            <input
+              id="galleryInput"
+              type="file"
+              accept="image/*"
+              multiple
+              (change)="onFileSelected($event)"
+              style="display:none"
+            />
+
+            <div class="evidence-row">
+              <!-- Take Photo: getUserMedia on desktop, native camera on mobile -->
+              <button type="button" class="btn-evidence" (click)="openCamera()">
+                <i class="fas fa-camera"></i> Take Photo
+              </button>
+              <!-- Upload: always opens file gallery -->
+              <button type="button" class="btn-evidence" (click)="openGallery()">
+                <i class="fas fa-upload"></i> Upload Images
+              </button>
+            </div>
+
+            <div *ngIf="newReport.photos.length > 0" class="photo-list">
+              <span *ngFor="let photo of newReport.photos; let i = index" class="photo-tag">
+                <i class="fas fa-image"></i> {{ photo.name }}
+                <button type="button" class="photo-remove" (click)="removePhoto(i)" title="Remove">&#215;</button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeReportModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="submitDiseaseReport()" [disabled]="!isReportFormValidPublic()">
+        <i class="fas fa-paper-plane"></i> Submit Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- VIEW REPORT MODAL                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showViewModal && selectedReport" (click)="closeViewModal()">
+  <div class="modal-content modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Disease Report Details</h2>
+      <button class="modal-close" (click)="closeViewModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-section">
+        <div class="detail-row">
+          <span class="detail-label">Report ID:</span>
+          <span class="detail-value"><span class="id-badge">{{ selectedReport.reportId }}</span></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Date:</span>
+          <span class="detail-value">{{ formatDate(selectedReport.reportDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Farmer:</span>
+          <span class="detail-value">{{ selectedReport.reportedBy || 'Unknown' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Crop:</span>
+          <span class="detail-value"><span class="crop-badge">{{ selectedReport.crop }}</span></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Disease:</span>
+          <span class="detail-value">{{ selectedReport.disease }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Location:</span>
+          <span class="detail-value">{{ selectedReport.location }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Affected Area:</span>
+          <span class="detail-value">{{ selectedReport.affectedArea }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Severity:</span>
+          <span class="detail-value">
+            <span class="status-badge" [ngClass]="getSeverityClass(selectedReport.severity)">
+              <i class="fas fa-circle"></i> {{ selectedReport.severity }}
+            </span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value">
+            <span class="status-badge" [ngClass]="getStatusClass(selectedReport.status)">
+              <i class="fas fa-circle"></i> {{ selectedReport.status }}
+            </span>
+          </span>
+        </div>
+        <div class="detail-row" *ngIf="selectedReport.photoPath">
+          <span class="detail-label">Evidence:</span>
+          <span class="detail-value"><i class="fas fa-camera"></i> Image attached</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeViewModal()">Close</button>
+      <button class="btn btn-primary" (click)="treatReport(selectedReport!)">
+        <i class="fas fa-pills"></i> Treat Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- EDIT REPORT MODAL                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showEditModal && selectedReport" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Disease Report</h2>
+      <button class="modal-close" (click)="closeEditModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-section">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Farmer Name *</label>
+              <input type="text" [(ngModel)]="reportForm.farmerName" name="editFarmerName" class="form-input"
+                     placeholder="Enter farmer's full name" />
+            </div>
+            <div class="form-group">
+              <label>Crop Type *</label>
+              <select [(ngModel)]="reportForm.crop" name="editCrop" class="form-input">
+                <option value="">Select crop</option>
+                <option value="Cocoa">Cocoa</option>
+                <option value="Coffee">Coffee</option>
+                <option value="Palm Oil">Palm Oil</option>
+                <option value="Cassava">Cassava</option>
+                <option value="Maize">Maize</option>
+                <option value="Cotton">Cotton</option>
+                <option value="Rice">Rice</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Disease Type *</label>
+              <select [(ngModel)]="reportForm.disease" name="editDisease" class="form-input">
+                <option value="">Select disease</option>
+                <option *ngFor="let disease of diseaseOptions" [value]="disease">{{ disease }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Severity *</label>
+              <select [(ngModel)]="reportForm.severity" name="editSeverity" class="form-input">
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Location *</label>
+              <input type="text" [(ngModel)]="reportForm.location" name="editLocation" class="form-input"
+                     placeholder="Enter location" />
+            </div>
+            <div class="form-group">
+              <label>Affected Area (hectares) *</label>
+              <input type="number" [(ngModel)]="reportForm.affectedArea" name="editAffectedArea" class="form-input"
+                     placeholder="2.5" step="0.1" min="0.1" />
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="updateDiseaseReport()">Update Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- TREAT REPORT MODAL                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showTreatModal && selectedReport" (click)="closeTreatModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Treat Disease Report</h2>
+      <button class="modal-close" (click)="closeTreatModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="treat-info-box" *ngIf="selectedReport">
+        <div class="detail-row">
+          <span class="detail-label">Report:</span>
+          <span class="detail-value"><span class="id-badge">{{ selectedReport.reportId }}</span> &#8212; {{ selectedReport.disease }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Farmer:</span>
+          <span class="detail-value">{{ selectedReport.reportedBy || 'Unknown' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Crop:</span>
+          <span class="detail-value"><span class="crop-badge">{{ selectedReport.crop }}</span></span>
+        </div>
+      </div>
+      <form>
+        <div class="form-section">
+          <h3 class="section-title">Treatment Plan</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Treatment Type *</label>
+              <select [(ngModel)]="treatmentForm.treatmentType" name="treatmentType" class="form-input">
+                <option value="">Select treatment</option>
+                <option value="Fungicide Application">Fungicide Application</option>
+                <option value="Pesticide Application">Pesticide Application</option>
+                <option value="Pruning">Pruning</option>
+                <option value="Soil Treatment">Soil Treatment</option>
+                <option value="Biological Control">Biological Control</option>
+                <option value="Integrated Pest Management">Integrated Pest Management</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Treatment Date *</label>
+              <input type="date" [(ngModel)]="treatmentForm.treatmentDate" name="treatmentDate" class="form-input" />
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3 class="section-title">Follow-up</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Assigned Expert</label>
+              <input type="text" [(ngModel)]="treatmentForm.assignedExpert" name="assignedExpert" class="form-input"
+                     placeholder="Expert name or ID" />
+            </div>
+            <div class="form-group">
+              <label>Follow-up Date</label>
+              <input type="date" [(ngModel)]="treatmentForm.followUpDate" name="followUpDate" class="form-input" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Treatment Notes</label>
+            <textarea [(ngModel)]="treatmentForm.treatmentNotes" name="treatmentNotes" class="form-textarea"
+                      placeholder="Describe the treatment plan, dosage, instructions, etc." rows="4"></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeTreatModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="submitTreatment()">Submit Treatment Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- LIVE CAMERA PREVIEW MODAL (desktop getUserMedia) -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="camera-overlay" *ngIf="showCameraModal" (click)="closeCameraModal()">
+  <div class="camera-modal" (click)="$event.stopPropagation()">
+
+    <div class="camera-modal-header">
+      <span><i class="fas fa-camera"></i>&nbsp; Camera</span>
+      <button class="camera-close-btn" (click)="closeCameraModal()">&#215;</button>
+    </div>
+
+    <div class="camera-preview-wrap">
+      <video id="cameraPreviewVideo" autoplay playsinline muted
+             class="camera-video"></video>
+      <!-- hidden canvas used to grab a frame -->
+      <canvas id="cameraSnapCanvas" style="display:none"></canvas>
+    </div>
+
+    <div class="camera-modal-footer">
+      <button type="button" class="btn btn-outline" (click)="closeCameraModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button type="button" class="btn btn-snap" (click)="snapPhoto()">
+        <i class="fas fa-circle"></i> Snap Photo
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- EXPORT MODAL                                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showExportModal" (click)="closeExportModal()">
+  <div class="modal-content modal-export" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div>
+        <h2>Export Plant Health Data</h2>
+        <p class="modal-description">Choose what to export and in which format</p>
+      </div>
+      <button class="modal-close" (click)="closeExportModal()">&#215;</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- What to export -->
+      <div class="export-section">
+        <p class="export-section-label">
+          <i class="fas fa-database"></i> What to export
+        </p>
+        <div class="export-option-group">
+
+          <label class="export-option" [class.selected]="exportScope === 'table'">
+            <input type="radio" [(ngModel)]="exportScope" name="exportScope" value="table" />
+            <div class="export-option-icon">
+              <i class="fas fa-table"></i>
+            </div>
+            <div class="export-option-text">
+              <span class="export-option-title">Reports Table</span>
+              <span class="export-option-desc">{{ filteredDiseaseReports.length }} filtered disease reports</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+
+          <label class="export-option" [class.selected]="exportScope === 'statistics'">
+            <input type="radio" [(ngModel)]="exportScope" name="exportScope" value="statistics" />
+            <div class="export-option-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="export-option-text">
+              <span class="export-option-title">Statistics Summary</span>
+              <span class="export-option-desc">Stat cards + disease trends table ({{ diseaseTrends.length }} diseases)</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+
+          <label class="export-option" [class.selected]="exportScope === 'both'">
+            <input type="radio" [(ngModel)]="exportScope" name="exportScope" value="both" />
+            <div class="export-option-icon">
+              <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="export-option-text">
+              <span class="export-option-title">Everything</span>
+              <span class="export-option-desc">Reports table + stat cards + disease trends — complete export</span>
+            </div>
+            <i class="fas fa-check export-option-check"></i>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Format -->
+      <div class="export-section">
+        <p class="export-section-label">
+          <i class="fas fa-file-export"></i> Export format
+        </p>
+        <div class="export-format-group">
+
+          <label class="export-format-card" [class.selected]="exportFormat === 'csv'">
+            <input type="radio" [(ngModel)]="exportFormat" name="exportFormat" value="csv" />
+            <i class="fas fa-file-csv export-format-icon"></i>
+            <span class="export-format-name">CSV</span>
+            <span class="export-format-desc">Excel / Spreadsheet</span>
+          </label>
+
+          <label class="export-format-card" [class.selected]="exportFormat === 'pdf'">
+            <input type="radio" [(ngModel)]="exportFormat" name="exportFormat" value="pdf" />
+            <i class="fas fa-file-pdf export-format-icon"></i>
+            <span class="export-format-name">PDF</span>
+            <span class="export-format-desc">Print / Share</span>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Preview summary -->
+      <div class="export-preview">
+        <i class="fas fa-info-circle"></i>
+        <span *ngIf="exportFormat === 'csv' && exportScope === 'table'">
+          Downloads <strong>plant-health-reports.csv</strong> with {{ filteredDiseaseReports.length }} rows
+        </span>
+        <span *ngIf="exportFormat === 'csv' && exportScope === 'statistics'">
+          Downloads <strong>plant-health-statistics.csv</strong> with summary metrics &amp; disease trends
+        </span>
+        <span *ngIf="exportFormat === 'csv' && exportScope === 'both'">
+          Downloads 2 CSV files: reports table &amp; statistics summary
+        </span>
+        <span *ngIf="exportFormat === 'pdf'">
+          Opens a print-ready PDF in a new tab — use <strong>Save as PDF</strong> in the print dialog
+        </span>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeExportModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="runExport()">
+        <i class="fas fa-download"></i>
+        Export {{ exportFormat === 'csv' ? 'CSV' : 'PDF' }}
+      </button>
+    </div>
+
+  </div>
+</div>

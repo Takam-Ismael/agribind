@@ -1,0 +1,1469 @@
+<!-- communication-dashboard.component.html -->
+
+<div class="main-content">
+  <div class="page-content">
+
+    <!-- ─── Toast Notifications ─────────────────────────────────────────── -->
+    <div class="toast-container">
+      <div *ngFor="let t of toasts"
+           class="toast toast-{{ t.type }}"
+           (click)="dismissToast(t.id)">
+        <i class="fas"
+           [class.fa-check-circle]="t.type==='success'"
+           [class.fa-times-circle]="t.type==='error'"
+           [class.fa-exclamation-triangle]="t.type==='warning'"
+           [class.fa-info-circle]="t.type==='info'"></i>
+        <span class="toast-msg">{{ t.message }}</span>
+      </div>
+    </div>
+
+    <!-- ─── Page Header ──────────────────────────────────────────────────── -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1><i class="fas fa-satellite-dish" style="color:var(--color-sidebar-green);margin-right:10px;"></i>Communications Center</h1>
+        <p class="page-description">Prepare audio clips and SMS templates, then attach them when broadcasting to farmers</p>
+      </div>
+      <div class="header-right">
+        <button class="btn-outline" (click)="exportCSV()">
+          <i class="fas fa-download"></i> Export
+        </button>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:white;border-radius:40px;box-shadow:0 2px 4px rgba(0,0,0,0.06);">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--color-sidebar-green);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;">CM</div>
+          <div style="display:flex;flex-direction:column;">
+            <span style="font-weight:600;font-size:13px;color:#1e293b;">Cooperative Manager</span>
+            <span style="font-size:11px;color:#64748b;">Communications Admin</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Metrics Grid ──────────────────────────────────────────────────── -->
+    <div class="metrics-grid">
+
+      <div class="metric-card">
+        <div class="metric-info">
+          <h3>{{ metrics.totalMessages.value | number }}</h3>
+          <p class="metric-label">Total Deliveries</p>
+          <p class="metric-trend positive"><i class="fas fa-arrow-up"></i> {{ metrics.totalMessages.change }}</p>
+        </div>
+        <div class="metric-icon green"><i class="fas fa-paper-plane"></i></div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-info">
+          <h3>{{ metrics.audioMessages.value }}</h3>
+          <p class="metric-label">Audio Clips</p>
+          <p class="metric-sub"><i class="fas fa-language" style="font-size:11px;"></i> {{ metrics.audioMessages.info }}</p>
+        </div>
+        <div class="metric-icon blue"><i class="fas fa-microphone"></i></div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-info">
+          <h3>{{ metrics.activeAlerts.value }}</h3>
+          <p class="metric-label">Active Alerts</p>
+          <p class="metric-trend danger"><i class="fas fa-exclamation-circle"></i> {{ metrics.activeAlerts.status }}</p>
+        </div>
+        <div class="metric-icon red"><i class="fas fa-bell"></i></div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-info">
+          <h3>{{ metrics.deliveryRate.value }}</h3>
+          <p class="metric-label">Delivery Rate</p>
+          <p class="metric-trend positive"><i class="fas fa-arrow-up"></i> {{ metrics.deliveryRate.change }}</p>
+        </div>
+        <div class="metric-icon green"><i class="fas fa-check-circle"></i></div>
+      </div>
+
+    </div>
+
+    <!-- ─── Navigation Tabs ───────────────────────────────────────────────── -->
+    <div class="tabs-bar">
+      <button *ngFor="let tab of navTabs"
+              class="tab-btn"
+              [class.active]="activeSection === tab.id"
+              (click)="setActiveSection(tab.id)">
+        <i [class]="tab.icon"></i> {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TAB 1 — AUDIO LIBRARY
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="activeSection === 'audio-library'">
+
+      <div class="section-header">
+        <h2><i class="fas fa-music" style="color:var(--color-sidebar-green);margin-right:8px;"></i>Audio Library</h2>
+        <div class="section-actions">
+          <div class="search-wrapper" style="max-width:280px;">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search audio…" [(ngModel)]="libSearch" />
+          </div>
+          <select class="form-input" style="height:40px;width:auto;min-width:130px;" [(ngModel)]="libLangFilter">
+            <option value="all">All Languages</option>
+            <option *ngFor="let l of supportedLanguages" [value]="l">{{ l }}</option>
+          </select>
+          <select class="form-input" style="height:40px;width:auto;min-width:140px;" [(ngModel)]="libTitleFilter">
+            <option value="all">All Titles</option>
+            <option *ngFor="let t of uniqueTitles" [value]="t">{{ t }}</option>
+          </select>
+          <button class="btn-primary" (click)="openAddAudioModal()">
+            <i class="fas fa-plus"></i> Add Audio
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="filteredLibrary.length === 0" class="no-data">
+        <i class="fas fa-music"></i>
+        <h4>No audio files found</h4>
+        <p>Add your first audio clip to get started.</p>
+      </div>
+
+      <!-- Library grid -->
+      <div class="library-grid" *ngIf="filteredLibrary.length > 0">
+        <div *ngFor="let item of filteredLibrary" class="library-card">
+
+          <div class="library-card-header">
+            <!-- Title or rename input -->
+            <div style="flex:1;min-width:0;" *ngIf="editingLibId !== item.id">
+              <p class="library-card-title">{{ item.title }}</p>
+            </div>
+            <div class="inline-rename" *ngIf="editingLibId === item.id" style="flex:1;">
+              <input type="text" [(ngModel)]="editingLibTitle" (keydown.enter)="confirmLibRename(item)" (keydown.escape)="cancelLibRename()" />
+              <button class="btn-icon btn-icon-green" title="Save" (click)="confirmLibRename(item)"><i class="fas fa-check"></i></button>
+              <button class="btn-icon btn-icon-gray"  title="Cancel" (click)="cancelLibRename()"><i class="fas fa-times"></i></button>
+            </div>
+            <span class="badge badge-language" style="flex-shrink:0;">{{ item.language }}</span>
+          </div>
+
+          <div class="library-card-meta">
+            <span><i class="fas fa-clock"></i> {{ item.durationLabel }}</span>
+            <span><i class="fas fa-broadcast-tower"></i> {{ item.usageCount }} uses</span>
+            <span><i class="fas fa-calendar-alt"></i> {{ item.createdAt | date:'MMM d, y' }}</span>
+          </div>
+
+          <!-- Playback progress -->
+          <div class="progress-bar-wrap" style="margin-top:10px;"></div>
+
+          <div class="library-card-actions">
+            <button class="play-btn"
+                    [class.playing]="playingLibId === item.id"
+                    (click)="toggleLibPlay(item)"
+                    [title]="playingLibId === item.id ? 'Pause' : 'Play'">
+              <i class="fas" [class.fa-pause]="playingLibId === item.id" [class.fa-play]="playingLibId !== item.id"></i>
+            </button>
+            <button class="btn-icon btn-icon-yellow" title="Rename" (click)="startLibRename(item)"><i class="fas fa-pen"></i></button>
+            <button class="btn-icon btn-icon-red"    title="Delete"  (click)="deleteLibItem(item)"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /audio-library -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TAB 2 — ANNOUNCEMENTS & NEEDS
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="activeSection === 'announcements'">
+
+      <div class="section-header">
+        <h2><i class="fas fa-bullhorn" style="color:var(--color-sidebar-green);margin-right:8px;"></i>Announcements &amp; Needs</h2>
+        <div class="section-actions">
+          <div class="search-wrapper" style="max-width:260px;">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search…" [(ngModel)]="broadcastSearch" />
+          </div>
+          <select class="form-input" style="height:40px;width:auto;min-width:160px;" [(ngModel)]="audioTypeFilter">
+            <option value="all">All Types</option>
+            <option *ngFor="let t of announcementTypes" [value]="t.value">{{ t.label }}</option>
+          </select>
+          <select class="form-input" style="height:40px;width:auto;min-width:130px;" [(ngModel)]="audioLangFilter">
+            <option value="all">All Languages</option>
+            <option *ngFor="let l of supportedLanguages" [value]="l">{{ l }}</option>
+          </select>
+          <button class="btn-primary" (click)="openBroadcastModal()">
+            <i class="fas fa-plus"></i> New Broadcast
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="filteredBroadcasts.length === 0" class="no-data">
+        <i class="fas fa-bullhorn"></i>
+        <h4>No broadcasts found</h4>
+        <p>Create your first broadcast to reach your farmers.</p>
+      </div>
+
+      <!-- Broadcast list -->
+      <div class="content-card" *ngIf="filteredBroadcasts.length > 0">
+        <div class="broadcast-list">
+          <div *ngFor="let b of filteredBroadcasts" class="broadcast-row">
+
+            <!-- Icon -->
+            <div class="broadcast-icon" [style.background]="getTypeColor(b.type) + '22'">
+              <i [class]="getTypeIcon(b.type)" [style.color]="getTypeColor(b.type)"></i>
+            </div>
+
+            <!-- Info -->
+            <div class="broadcast-info">
+              <div *ngIf="editingBroadcastId !== b.id" class="broadcast-title">{{ b.title }}</div>
+              <div *ngIf="editingBroadcastId === b.id" class="inline-rename">
+                <input type="text" [(ngModel)]="editingBroadcastTitle"
+                       (keydown.enter)="confirmRename(b)"
+                       (keydown.escape)="cancelRename()" />
+                <button class="btn-icon btn-icon-green" (click)="confirmRename(b)"><i class="fas fa-check"></i></button>
+                <button class="btn-icon btn-icon-gray"  (click)="cancelRename()"><i class="fas fa-times"></i></button>
+              </div>
+              <div class="broadcast-meta">
+                <span><i class="fas fa-tag"></i> {{ getTypeLabel(b.type) }}</span>
+                <span><i class="fas fa-users"></i> {{ b.listeners }} listeners</span>
+                <span><i class="fas fa-calendar"></i> {{ formatDate(b.date) }}</span>
+                <span><i class="fas fa-redo"></i> {{ b.repeatSchedule }}</span>
+              </div>
+            </div>
+
+            <!-- Language variants -->
+            <div class="broadcast-variants">
+              <span *ngFor="let v of b.variants" class="variant-chip variant-has-audio">
+                <i class="fas fa-volume-up"></i> {{ v.language }}
+              </span>
+            </div>
+
+            <!-- Status badge -->
+            <span class="badge" [class]="statusClass(b.status)">{{ b.status }}</span>
+
+            <!-- Playback -->
+            <div class="broadcast-playback" *ngIf="b.variants[0]?.objectUrl">
+              <button class="play-btn"
+                      [class.playing]="b.playbackState === 'playing'"
+                      (click)="toggleBroadcast(b)">
+                <i class="fas"
+                   [class.fa-play]="b.playbackState !== 'playing'"
+                   [class.fa-pause]="b.playbackState === 'playing'"></i>
+              </button>
+              <div class="playback-progress">
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill" [style.width]="b.playbackProgress + '%'"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="broadcast-actions">
+              <button class="btn-icon btn-icon-blue"  title="View details" (click)="viewBroadcastDetail(b)"><i class="fas fa-eye"></i></button>
+              <button class="btn-icon btn-icon-green" title="Rename"       (click)="startRename(b)"><i class="fas fa-pen"></i></button>
+              <button class="btn-icon btn-icon-red"   title="Delete"       (click)="deleteBroadcast(b)"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /announcements -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TAB 3 — ALERTS
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="activeSection === 'alerts'">
+
+      <!-- Alert stats row -->
+      <div class="alert-stats-row">
+        <div class="alert-stat-card">
+          <div class="alert-stat-icon" style="background:#f1f5f9;">
+            <i class="fas fa-bell" style="color:#64748b;"></i>
+          </div>
+          <div class="alert-stat-info">
+            <span>{{ alertStats.total }}</span>
+            <p>Total</p>
+          </div>
+        </div>
+        <div class="alert-stat-card">
+          <div class="alert-stat-icon" style="background:#dcfce7;">
+            <i class="fas fa-bell" style="color:var(--color-sidebar-green);"></i>
+          </div>
+          <div class="alert-stat-info">
+            <span>{{ alertStats.active }}</span>
+            <p>Active</p>
+          </div>
+        </div>
+        <div class="alert-stat-card">
+          <div class="alert-stat-icon" style="background:#dbeafe;">
+            <i class="fas fa-paper-plane" style="color:#1d4ed8;"></i>
+          </div>
+          <div class="alert-stat-info">
+            <span>{{ alertStats.sent }}</span>
+            <p>Sent</p>
+          </div>
+        </div>
+        <div class="alert-stat-card">
+          <div class="alert-stat-icon" style="background:#fee2e2;">
+            <i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i>
+          </div>
+          <div class="alert-stat-info">
+            <span>{{ alertStats.critical }}</span>
+            <p>Critical</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action bar -->
+      <div class="action-bar">
+        <div class="search-wrapper">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search alerts…" [(ngModel)]="alertSearch" (ngModelChange)="recalcAlertStats()" />
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <select class="form-input" style="height:40px;width:auto;min-width:130px;" [(ngModel)]="alertStatusFilter" (ngModelChange)="recalcAlertStats()">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="sent">Sent</option>
+          </select>
+          <button class="btn-primary" (click)="openAlertModal()">
+            <i class="fas fa-plus"></i> Create Alert
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="filteredAlerts.length === 0" class="no-data">
+        <i class="fas fa-bell"></i>
+        <h4>No alerts found</h4>
+        <p>Create a new alert to notify your farmers.</p>
+      </div>
+
+      <!-- Alerts table -->
+      <div class="table-container" *ngIf="filteredAlerts.length > 0">
+        <table>
+          <thead>
+          <tr>
+            <th><i class="fas fa-hashtag"></i>ID</th>
+            <th><i class="fas fa-tag"></i>Type</th>
+            <th><i class="fas fa-flag"></i>Priority</th>
+            <th style="min-width:220px;"><i class="fas fa-align-left"></i>Title</th>
+            <th><i class="fas fa-users"></i>Recipients</th>
+            <th><i class="fas fa-broadcast-tower"></i>Channels</th>
+            <th><i class="fas fa-file-alt"></i>SMS Template</th>
+            <th><i class="fas fa-chart-bar"></i>Delivery</th>
+            <th><i class="fas fa-calendar"></i>Date</th>
+            <th><i class="fas fa-circle"></i>Status</th>
+            <th><i class="fas fa-cog"></i>Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let a of filteredAlerts">
+            <td><span class="id-badge">{{ a.id }}</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <i [class]="getAlertIcon(a.type)" style="color:var(--color-sidebar-green);font-size:14px;"></i>
+                <span>{{ capitalize(a.type) }}</span>
+              </div>
+            </td>
+            <td><span class="badge" [class]="priorityClass(a.priority)">{{ a.priority }}</span></td>
+            <td>
+              <div style="font-weight:600;color:#1e293b;font-size:13px;">{{ a.title }}</div>
+              <div style="font-size:12px;color:#64748b;margin-top:2px;">{{ a.description }}</div>
+            </td>
+            <td>{{ a.recipients | number }}</td>
+            <td>
+              <div class="alert-channels">
+                  <span *ngFor="let ch of a.channels" class="channel-chip" [class.chip-audio]="ch==='audio'" [class.chip-sms]="ch==='sms'" [class.chip-email]="ch==='email'">
+                    <i class="fas"
+                       [class.fa-volume-up]="ch==='audio'"
+                       [class.fa-sms]="ch==='sms'"
+                       [class.fa-envelope]="ch==='email'"></i>
+                  </span>
+              </div>
+            </td>
+            <td>
+                <span *ngIf="a.scriptTemplateId" style="display:flex;align-items:center;gap:5px;font-size:12px;color:#475569;">
+                  <i class="fas fa-file-alt" style="color:var(--color-sidebar-green);"></i>
+                  {{ templateTitle(a.scriptTemplateId) }}
+                </span>
+              <span *ngIf="!a.scriptTemplateId" style="color:#94a3b8;">—</span>
+            </td>
+            <td>
+                <span [style.color]="a.deliveryRate > 90 ? 'var(--color-sidebar-green)' : a.deliveryRate > 70 ? '#a37e00' : '#dc2626'"
+                      style="font-weight:600;font-size:13px;">
+                  {{ a.deliveryRate }}%
+                </span>
+            </td>
+            <td style="font-size:12px;color:#64748b;white-space:nowrap;">{{ formatDate(a.date) }}</td>
+            <td><span class="badge" [class]="statusClass(a.status)">{{ a.status }}</span></td>
+            <td>
+              <div class="action-buttons">
+                <button class="view-btn"   title="View"         (click)="viewAlertDetail(a)"><i class="fas fa-eye"></i></button>
+                <button class="edit-btn"   title="Edit"         (click)="openEditAlert(a)"><i class="fas fa-pen"></i></button>
+                <button class="view-btn"   title="Mark as sent" (click)="markAlertSent(a.id)" [disabled]="a.status==='sent'" style="background:#dcfce7;color:#16a34a;"><i class="fas fa-paper-plane"></i></button>
+                <button class="delete-btn" title="Delete"       (click)="deleteAlert(a.id)"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /alerts -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TAB 4 — TEMPLATES
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="activeSection === 'templates'">
+
+      <div class="section-header">
+        <h2><i class="fas fa-file-alt" style="color:var(--color-sidebar-green);margin-right:8px;"></i>Message Templates</h2>
+        <div class="section-actions">
+          <div class="search-wrapper" style="max-width:260px;">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search templates…" [(ngModel)]="templateSearch" />
+          </div>
+          <select class="form-input" style="height:40px;width:auto;min-width:140px;" [(ngModel)]="templateCategoryFilter">
+            <option value="all">All Categories</option>
+            <option value="payment">Payment</option>
+            <option value="meeting">Meeting</option>
+            <option value="logistics">Logistics</option>
+            <option value="alert">Alert</option>
+            <option value="need">Need</option>
+            <option value="general">General</option>
+          </select>
+          <button class="btn-primary" (click)="openTemplateModal()">
+            <i class="fas fa-plus"></i> New Template
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredTemplates.length === 0" class="no-data">
+        <i class="fas fa-file-alt"></i>
+        <h4>No templates found</h4>
+        <p>Create your first SMS template to use in alerts and broadcasts.</p>
+      </div>
+
+      <div class="template-grid" *ngIf="filteredTemplates.length > 0">
+        <div *ngFor="let t of filteredTemplates" class="template-card">
+
+          <div class="template-card-header">
+            <span class="template-card-title">{{ t.title }}</span>
+            <div style="display:flex;gap:4px;flex-shrink:0;">
+              <span class="badge badge-category">{{ t.category }}</span>
+              <span class="badge badge-language">{{ t.language }}</span>
+            </div>
+          </div>
+
+          <p class="template-card-desc">{{ t.description }}</p>
+
+          <div class="template-card-content">{{ t.content }}</div>
+
+          <div class="template-card-footer">
+            <span class="usage-badge"><i class="fas fa-chart-bar"></i> {{ t.usageCount }} uses</span>
+            <span style="font-size:11px;color:#94a3b8;">{{ t.createdDate }}</span>
+            <div class="template-card-actions">
+              <button class="btn-icon btn-icon-green" title="Edit"   (click)="openEditTemplate(t)"><i class="fas fa-pen"></i></button>
+              <button class="btn-icon btn-icon-red"   title="Delete" (click)="deleteTemplate(t)"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /templates -->
+
+  </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — ADD AUDIO TO LIBRARY
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showAddAudioModal" (click.self)="closeAddAudioModal()">
+  <div class="modal-content modal-sm">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-music" style="margin-right:8px;font-size:16px;"></i>Add to Audio Library</h2>
+        <p>Record or upload an audio file</p>
+      </div>
+      <button class="modal-close" (click)="closeAddAudioModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Title & Language -->
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fas fa-heading"></i> Title <span class="required">*</span></label>
+          <input class="form-input" type="text" placeholder="e.g. NPK Fertilizer Availability" [(ngModel)]="libForm.title" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-language"></i> Language <span class="required">*</span></label>
+          <select class="form-input" [(ngModel)]="libForm.language">
+            <option *ngFor="let l of supportedLanguages" [value]="l">{{ l }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Record / Upload tabs -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-microphone"></i> Audio Source</div>
+
+        <!-- Idle: show record + upload buttons -->
+        <div *ngIf="libAudioStatus === 'idle'" class="audio-recorder">
+          <div class="recorder-controls">
+            <button class="btn-primary" (click)="startLibRecording()">
+              <i class="fas fa-microphone"></i> Start Recording
+            </button>
+            <span style="color:#94a3b8;font-size:13px;">or</span>
+            <button class="btn-outline" (click)="triggerLibFileInput()">
+              <i class="fas fa-upload"></i> Upload File
+            </button>
+          </div>
+          <p style="font-size:12px;color:#94a3b8;margin-top:10px;">MP3, WAV, OGG, WebM · max 50 MB</p>
+        </div>
+
+        <!-- Recording in progress -->
+        <div *ngIf="libAudioStatus === 'recording'" class="audio-recorder">
+          <canvas #waveformCanvas class="waveform-canvas"></canvas>
+          <div class="recorder-controls" style="margin-top:10px;">
+            <div class="recording-indicator">
+              <div class="recording-dot"></div> Recording…
+            </div>
+            <span class="record-timer">{{ libRecordingLabel }}</span>
+            <button class="btn-danger" (click)="stopLibRecording()">
+              <i class="fas fa-stop"></i> Stop
+            </button>
+          </div>
+        </div>
+
+        <!-- Recorded: pre-listen & save -->
+        <div *ngIf="libAudioStatus === 'recorded'" class="audio-recorder">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button class="play-btn"
+                    [class.playing]="libPreListenState === 'playing'"
+                    [class.paused]="libPreListenState === 'paused'"
+                    (click)="toggleLibPreListen()">
+              <i class="fas"
+                 [class.fa-play]="libPreListenState !== 'playing'"
+                 [class.fa-pause]="libPreListenState === 'playing'"></i>
+            </button>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:#1e293b;">
+                {{ libSelectedFileName || 'Recorded audio' }}
+              </div>
+              <div class="progress-bar-wrap" style="margin-top:4px;">
+                <div class="progress-bar-fill" [style.width]="libPreListenProgress + '%'"></div>
+              </div>
+            </div>
+            <span class="record-timer">{{ libRecordingLabel }}</span>
+            <button class="btn-icon btn-icon-red" title="Discard" (click)="discardLibRecording()">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeAddAudioModal()">Cancel</button>
+      <button class="btn btn-primary"
+              [disabled]="!canSaveToLibrary || isUploadingToLib"
+              (click)="saveToLibrary()">
+        <i class="fas" [class.fa-save]="!isUploadingToLib" [class.fa-spinner]="isUploadingToLib" [class.fa-spin]="isUploadingToLib"></i>
+        {{ isUploadingToLib ? 'Saving…' : 'Save to Library' }}
+      </button>
+    </div>
+
+    <!-- Hidden file input -->
+    <input #libFileInput type="file" accept="audio/*" style="display:none;" (change)="onLibFileSelected($event)" />
+
+  </div>
+</div>
+
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — NEW BROADCAST (MULTI-VARIANT SUPPORT)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showBroadcastModal" (click.self)="closeBroadcastModal()">
+  <div class="modal-content modal-lg">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-bullhorn"></i> New Broadcast</h2>
+        <p>Set up an audio announcement for your farmers</p>
+      </div>
+      <button class="modal-close" (click)="closeBroadcastModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Basic Info -->
+      <div class="form-section">
+        <div class="section-title">Basic Info</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Broadcast Title <span class="required">*</span></label>
+            <input class="form-input" type="text" placeholder="e.g. Monthly Loan Reminder" [(ngModel)]="broadcastForm.title" />
+          </div>
+          <div class="form-group">
+            <label>Target Audience</label>
+            <select class="form-input" [(ngModel)]="broadcastForm.targetAudience">
+              <option value="ALL_MEMBERS">All Members</option>
+              <option value="ACTIVE_MEMBERS">Active Members</option>
+              <option value="ZONE_1">Zone 1</option>
+              <option value="ZONE_2">Zone 2</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcement Type -->
+      <div class="form-section">
+        <div class="section-title">Announcement Type</div>
+        <div class="type-grid">
+          <div *ngFor="let t of announcementTypes"
+               class="type-card"
+               [class.selected]="broadcastForm.type === t.value"
+               [style.border-color]="broadcastForm.type === t.value ? t.color : ''"
+               (click)="broadcastForm.type = t.value">
+            <i [class]="t.icon" [style.color]="t.color"></i>
+            <span>{{ t.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule -->
+      <div class="form-section">
+        <div class="section-title">Schedule</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Schedule For (optional)</label>
+            <input class="form-input" type="datetime-local" [(ngModel)]="broadcastForm.scheduleFor" [min]="today" />
+          </div>
+          <div class="form-group">
+            <label>Repeat</label>
+            <select class="form-input" [(ngModel)]="broadcastForm.repeatSchedule">
+              <option value="none">No repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Expires At (optional)</label>
+            <input class="form-input" type="date" [(ngModel)]="broadcastForm.expiresAt" [min]="today" />
+          </div>
+          <div class="form-group">
+            <label>SMS Template (optional)</label>
+            <select class="form-input" [(ngModel)]="broadcastForm.scriptTemplateId">
+              <option value="">None</option>
+              <option *ngFor="let t of templates" [value]="t.id">{{ t.title }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Options -->
+      <div class="form-section">
+        <div class="section-title">Options</div>
+        <div class="toggle-row">
+          <div class="toggle-label">
+            <i class="fas fa-play-circle"></i>
+            <div>
+              Auto-Play on Delivery
+              <p>Audio plays automatically when received</p>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="broadcastForm.autoPlay" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-label">
+            <i class="fas fa-sms"></i>
+            <div>
+              SMS Transcription Fallback
+              <p>Send SMS if audio delivery fails</p>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="broadcastForm.smsTranscription" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- SELECTED AUDIO VARIANTS (display current list) -->
+      <!-- LANGUAGE COVERAGE CHECKLIST -->
+<div class="form-section">
+  <div class="section-title">
+    <i class="fas fa-globe"></i> Language Coverage
+    <span style="margin-left:auto;font-size:12px;font-weight:600;color:#64748b;">
+      {{ broadcastForm.selectedVariants.length }}/{{ supportedLanguages.length }} languages covered
+    </span>
+  </div>
+
+  <!-- Coverage progress bar -->
+  <div style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:12px;color:#64748b;">Coverage</span>
+      <span style="font-size:12px;font-weight:700;"
+            [style.color]="coveragePercentage === 100 ? '#16a34a' : coveragePercentage >= 60 ? '#d97706' : '#dc2626'">
+        {{ coveragePercentage }}%
+      </span>
+    </div>
+    <div style="height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
+      <div
+        [style.width]="coveragePercentage + '%'"
+        [style.background]="coveragePercentage === 100 ? '#16a34a' : coveragePercentage >= 60 ? '#d97706' : '#dc2626'"
+        style="height:100%;border-radius:99px;transition:width 0.4s ease;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Language rows -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div *ngFor="let item of languageCoverage"
+         style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid;"
+         [style.background]="item.covered ? '#f0fdf4' : '#fafafa'"
+         [style.border-color]="item.covered ? '#bbf7d0' : '#e2e8f0'">
+
+      <!-- Status icon -->
+      <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+           [style.background]="item.covered ? '#16a34a' : '#e2e8f0'">
+        <i class="fas"
+           [class.fa-check]="item.covered"
+           [class.fa-times]="!item.covered"
+           [style.color]="item.covered ? '#fff' : '#94a3b8'"
+           style="font-size:11px;"></i>
+      </div>
+
+      <!-- Language name -->
+      <span style="font-weight:700;font-size:13px;min-width:80px;"
+            [style.color]="item.covered ? '#15803d' : '#64748b'">
+        {{ item.language }}
+      </span>
+
+      <!-- Audio info or missing label -->
+      <div style="flex:1;">
+        <span *ngIf="item.covered" style="font-size:12px;color:#166534;">
+          <i class="fas fa-music" style="margin-right:4px;"></i>
+          {{ item.variant?.fileName || 'Recorded audio' }} · {{ item.variant?.durationLabel }}
+          <span *ngIf="item.variant?.reused" class="badge badge-category" style="margin-left:6px;">Library</span>
+        </span>
+        <span *ngIf="!item.covered" style="font-size:12px;color:#94a3b8;font-style:italic;">
+          No audio added — farmers speaking {{ item.language }} will not receive this broadcast
+        </span>
+      </div>
+
+      <!-- Remove button (only if covered) -->
+      <button *ngIf="item.covered"
+              class="btn-icon btn-icon-red"
+              style="width:26px;height:26px;font-size:11px;flex-shrink:0;"
+              title="Remove {{ item.language }} variant"
+              (click)="removeVariant(item.language)">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Warning banner if languages are missing -->
+  <div *ngIf="uncoveredLanguages.length > 0"
+       style="margin-top:14px;padding:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;display:flex;align-items:flex-start;gap:10px;">
+    <i class="fas fa-exclamation-triangle" style="color:#d97706;margin-top:2px;flex-shrink:0;"></i>
+    <div>
+      <p style="font-size:13px;font-weight:700;color:#92400e;margin:0 0 4px 0;">
+        {{ uncoveredLanguages.length }} language{{ uncoveredLanguages.length > 1 ? 's' : '' }} not covered
+      </p>
+      <p style="font-size:12px;color:#b45309;margin:0;line-height:1.6;">
+        Farmers whose preferred language is
+        <strong>{{ uncoveredLanguages.join(', ') }}</strong>
+        will NOT receive this broadcast. Add audio for these languages or proceed anyway.
+      </p>
+    </div>
+  </div>
+
+  <!-- Success banner if all covered -->
+  <div *ngIf="uncoveredLanguages.length === 0 && broadcastForm.selectedVariants.length > 0"
+       style="margin-top:14px;padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;display:flex;align-items:center;gap:10px;">
+    <i class="fas fa-check-circle" style="color:#16a34a;flex-shrink:0;"></i>
+    <p style="font-size:13px;font-weight:700;color:#15803d;margin:0;">
+      All languages covered! Every farmer will receive this broadcast in their preferred language. 🎉
+    </p>
+  </div>
+</div>
+
+      <!-- Select Audio from Library -->
+      <div class="form-section">
+        <div class="section-title">Select Audio from Library</div>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+          <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search audio…" [(ngModel)]="broadcastTitleSearch" />
+          </div>
+          <select class="form-input" style="width:auto;" [(ngModel)]="broadcastLangFilter">
+            <option value="all">All Languages</option>
+            <option *ngFor="let l of supportedLanguages" [value]="l">{{ l }}</option>
+          </select>
+        </div>
+        <div class="lib-selector">
+          <div class="lib-selector-list">
+            <div *ngIf="availableLibraryForBroadcast.length === 0" class="empty-list">
+              <i class="fas fa-check-circle"></i> All available audio added
+            </div>
+            <div *ngFor="let item of availableLibraryForBroadcast"
+                 class="lib-selector-item"
+                 (click)="selectLibraryAudio(item)">
+              <div class="lib-item-info">
+                <div class="lib-item-title">{{ item.title }}</div>
+                <div class="lib-item-meta">
+                  <span><i class="fas fa-language"></i> {{ item.language }}</span>
+                  <span><i class="fas fa-clock"></i> {{ item.durationLabel }}</span>
+                </div>
+              </div>
+              <button class="btn-icon btn-icon-green"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Record New Audio Inline -->
+      <div class="form-section">
+        <div class="section-title">Or Record New Audio Inline</div>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+          <select class="form-input" style="width:auto;" [(ngModel)]="inlineLang">
+            <option *ngFor="let l of availableInlineLangs" [value]="l">{{ l }}</option>
+          </select>
+          <button class="btn-outline" *ngIf="inlineAudioStatus === 'idle'" (click)="startRecording()">
+            <i class="fas fa-microphone"></i> Record
+          </button>
+          <button class="btn-danger" *ngIf="inlineAudioStatus === 'recording'" (click)="stopRecording()">
+            <i class="fas fa-stop"></i> Stop ({{ inlineRecordingLabel }})
+          </button>
+          <button class="btn-outline" *ngIf="inlineAudioStatus === 'idle'" (click)="triggerFileInput()">
+            <i class="fas fa-upload"></i> Upload
+          </button>
+        </div>
+
+        <!-- Recorded preview -->
+        <div *ngIf="inlineAudioStatus === 'recorded'" class="recorded-preview">
+          <button class="play-btn" [class.playing]="inlinePreListenState === 'playing'" (click)="toggleInlinePreListen()">
+            <i class="fas" [class.fa-play]="inlinePreListenState !== 'playing'" [class.fa-pause]="inlinePreListenState === 'playing'"></i>
+          </button>
+          <div class="preview-info">
+            <div>{{ inlineFileName || 'Recorded audio' }}</div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" [style.width]="inlinePreListenProgress + '%'"></div></div>
+          </div>
+          <span class="record-timer">{{ inlineRecordingLabel }}</span>
+          <button class="btn-icon btn-icon-green" (click)="confirmInlineVariant()"><i class="fas fa-check"></i></button>
+          <button class="btn-icon btn-icon-red"   (click)="discardInlineRecording()"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+
+      <!-- Upload progress bar -->
+      <div *ngIf="isBroadcasting" class="upload-progress" style="margin-top:10px;">
+        <span>Broadcasting...</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" [style.width]="uploadProgress + '%'"></div></div>
+        <span>{{ uploadProgress }}%</span>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeBroadcastModal()">Cancel</button>
+      <button class="btn btn-primary"
+              [disabled]="!canBroadcast || isBroadcasting"
+              (click)="broadcastAudio()">
+        <i class="fas" [class.fa-paper-plane]="!isBroadcasting" [class.fa-spinner]="isBroadcasting" [class.fa-spin]="isBroadcasting"></i>
+        {{ isBroadcasting ? 'Broadcasting…' : 'Broadcast' }}
+      </button>
+    </div>
+
+    <input #hiddenFileInput type="file" accept="audio/*" style="display:none;" (change)="onFileSelected($event)" />
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — CREATE ALERT
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showAlertModal" (click.self)="closeAlertModal()">
+  <div class="modal-content modal-lg">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-bell" style="margin-right:8px;font-size:16px;"></i>Create Alert</h2>
+        <p>Send an urgent notification to your farmers</p>
+      </div>
+      <button class="modal-close" (click)="closeAlertModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Title & Type -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-info-circle"></i> Alert Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label><i class="fas fa-heading"></i> Title <span class="required">*</span></label>
+            <input class="form-input" type="text" placeholder="e.g. Heavy Rainfall Warning" [(ngModel)]="alertForm.title" />
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-tag"></i> Type</label>
+            <select class="form-input" [(ngModel)]="alertForm.type">
+              <option value="weather">Weather</option>
+              <option value="payment">Payment</option>
+              <option value="price">Price</option>
+              <option value="security">Security</option>
+              <option value="emergency">Emergency</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="info">Info</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-align-left"></i> Description</label>
+          <textarea class="form-input" rows="3" placeholder="Brief description of the alert…" [(ngModel)]="alertForm.description"></textarea>
+        </div>
+      </div>
+
+      <!-- Priority & Audience -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-flag"></i> Priority &amp; Audience</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label><i class="fas fa-flag"></i> Priority</label>
+            <select class="form-input" [(ngModel)]="alertForm.priority" (ngModelChange)="onAlertPriorityChange($event)">
+              <option value="critical">Critical</option>
+              <option value="warning">Warning</option>
+              <option value="information">Information</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-users"></i> Target Audience</label>
+            <select class="form-input" [(ngModel)]="alertForm.audience">
+              <option value="ALL_MEMBERS">All Members</option>
+              <option value="ACTIVE_MEMBERS">Active Members</option>
+              <option value="ZONE_1">Zone 1</option>
+              <option value="ZONE_2">Zone 2</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-calendar-times"></i> Expiry Date (optional)</label>
+          <input class="form-input" type="date" [(ngModel)]="alertForm.expiryDate" [min]="today" style="max-width:220px;" />
+        </div>
+      </div>
+
+      <!-- Delivery Channels -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-broadcast-tower"></i> Delivery Channels</div>
+        <p style="font-size:12px;color:#64748b;margin-bottom:10px;">
+          <i class="fas fa-info-circle" style="color:var(--color-sidebar-green);"></i>
+          Channels pre-set by priority. Adjustable before sending. Attach a template for SMS content.
+        </p>
+        <div class="channel-toggles">
+          <button class="channel-toggle"
+                  [class.active]="isAlertChannelActive('audio')"
+                  (click)="toggleAlertChannel('audio')">
+            <i class="fas fa-volume-up"></i> Audio
+          </button>
+          <button class="channel-toggle"
+                  [class.active]="isAlertChannelActive('sms')"
+                  (click)="toggleAlertChannel('sms')">
+            <i class="fas fa-sms"></i> SMS
+          </button>
+          <button class="channel-toggle"
+                  [class.active]="isAlertChannelActive('email')"
+                  (click)="toggleAlertChannel('email')">
+            <i class="fas fa-envelope"></i> Email
+          </button>
+        </div>
+
+        <!-- ── Audio channel selector (new feature) ─────────────────────── -->
+        <div *ngIf="isAlertChannelActive('audio')" class="audio-channel-section">
+          <div class="audio-channel-label">
+            <i class="fas fa-music"></i> Select Audio Message
+          </div>
+
+          <!-- Search / filter row -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            <div class="search-wrapper" style="max-width:220px;flex:1;">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="Search audio…" [(ngModel)]="alertAudioSearch" />
+            </div>
+            <select class="form-input" style="height:40px;width:auto;min-width:130px;" [(ngModel)]="alertAudioLangFilter">
+              <option value="all">All Languages</option>
+              <option *ngFor="let l of supportedLanguages" [value]="l">{{ l }}</option>
+            </select>
+          </div>
+
+          <!-- Library list -->
+          <div class="lib-selector">
+            <div class="lib-selector-list">
+              <div *ngIf="filteredAlertAudio.length === 0" style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;">
+                No audio files found.
+                <a (click)="setActiveSection('audio-library')" style="color:var(--color-sidebar-green);cursor:pointer;font-weight:600;margin-left:4px;">Go to Audio Library</a>
+              </div>
+              <div *ngFor="let item of filteredAlertAudio"
+                   class="lib-selector-item"
+                   [class.selected]="alertForm.audioLibraryId === item.id"
+                   (click)="selectAlertAudio(item)">
+                <div style="width:34px;height:34px;border-radius:8px;background:var(--color-badge-bg-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="fas fa-music" style="color:var(--color-sidebar-green);font-size:14px;"></i>
+                </div>
+                <div class="lib-item-info">
+                  <div class="lib-item-title">{{ item.title }}</div>
+                  <div class="lib-item-meta">
+                    <span><i class="fas fa-language"></i> {{ item.language }}</span>
+                    <span><i class="fas fa-clock"></i> {{ item.durationLabel }}</span>
+                    <span><i class="fas fa-broadcast-tower"></i> {{ item.usageCount }} uses</span>
+                  </div>
+                </div>
+                <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;">
+                  <button class="play-btn"
+                          style="width:30px;height:30px;font-size:12px;"
+                          [class.playing]="playingAlertAudioId === item.id"
+                          (click)="$event.stopPropagation(); toggleAlertAudioPreview(item)"
+                          [title]="playingAlertAudioId === item.id ? 'Pause' : 'Preview'">
+                    <i class="fas" [class.fa-pause]="playingAlertAudioId === item.id" [class.fa-play]="playingAlertAudioId !== item.id"></i>
+                  </button>
+                  <i *ngIf="alertForm.audioLibraryId === item.id"
+                     class="fas fa-check-circle"
+                     style="color:var(--color-sidebar-green);font-size:18px;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected audio preview -->
+          <div *ngIf="alertForm.audioLibraryId" class="selected-audio-preview">
+            <i class="fas fa-check-circle"></i>
+            <span>
+              <strong>{{ selectedAlertAudioTitle }}</strong> selected
+              <span class="badge badge-language" style="margin-left:6px;">{{ selectedAlertAudioLanguage }}</span>
+            </span>
+            <button class="btn-icon btn-icon-red" style="width:26px;height:26px;font-size:11px;" title="Remove" (click)="clearAlertAudio()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <!-- ── /Audio channel selector ────────────────────────────────────── -->
+
+        <!-- SMS Template selector -->
+        <div class="form-group" style="margin-top:14px;">
+          <label><i class="fas fa-file-alt"></i> SMS / Email Template (optional)</label>
+          <select class="form-input" [(ngModel)]="alertForm.scriptTemplateId">
+            <option value="">None</option>
+            <option *ngFor="let t of templates" [value]="t.id">{{ t.title }}</option>
+          </select>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeAlertModal()">Cancel</button>
+      <button class="btn btn-primary"
+              [disabled]="!canSendAlert || isSendingAlert"
+              (click)="sendAlert()">
+        <i class="fas" [class.fa-paper-plane]="!isSendingAlert" [class.fa-spinner]="isSendingAlert" [class.fa-spin]="isSendingAlert"></i>
+        {{ isSendingAlert ? 'Sending…' : 'Send Alert' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — EDIT ALERT
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showEditAlertModal" (click.self)="closeEditAlertModal()">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-pen" style="margin-right:8px;font-size:16px;"></i>Edit Alert</h2>
+        <p>Update alert details</p>
+      </div>
+      <button class="modal-close" (click)="closeEditAlertModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fas fa-heading"></i> Title <span class="required">*</span></label>
+          <input class="form-input" type="text" [(ngModel)]="alertForm.title" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-tag"></i> Type</label>
+          <select class="form-input" [(ngModel)]="alertForm.type">
+            <option value="weather">Weather</option>
+            <option value="payment">Payment</option>
+            <option value="price">Price</option>
+            <option value="security">Security</option>
+            <option value="emergency">Emergency</option>
+            <option value="info">Info</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-align-left"></i> Description</label>
+        <textarea class="form-input" rows="3" [(ngModel)]="alertForm.description"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fas fa-flag"></i> Priority</label>
+          <select class="form-input" [(ngModel)]="alertForm.priority" (ngModelChange)="onAlertPriorityChange($event)">
+            <option value="critical">Critical</option>
+            <option value="warning">Warning</option>
+            <option value="information">Information</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-file-alt"></i> SMS Template</label>
+          <select class="form-input" [(ngModel)]="alertForm.scriptTemplateId">
+            <option value="">None</option>
+            <option *ngFor="let t of templates" [value]="t.id">{{ t.title }}</option>
+          </select>
+        </div>
+      </div>
+      <!-- Channels -->
+      <div class="form-group">
+        <label><i class="fas fa-broadcast-tower"></i> Channels</label>
+        <div class="channel-toggles">
+          <button class="channel-toggle" [class.active]="isAlertChannelActive('audio')" (click)="toggleAlertChannel('audio')">
+            <i class="fas fa-volume-up"></i> Audio
+          </button>
+          <button class="channel-toggle" [class.active]="isAlertChannelActive('sms')"   (click)="toggleAlertChannel('sms')">
+            <i class="fas fa-sms"></i> SMS
+          </button>
+          <button class="channel-toggle" [class.active]="isAlertChannelActive('email')" (click)="toggleAlertChannel('email')">
+            <i class="fas fa-envelope"></i> Email
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeEditAlertModal()">Cancel</button>
+      <button class="btn btn-primary"
+              [disabled]="!alertForm.title.trim() || isSavingAlert"
+              (click)="updateAlert()">
+        <i class="fas fa-save"></i> {{ isSavingAlert ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — ALERT DETAIL
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showAlertDetail && selectedAlert" (click.self)="showAlertDetail=false">
+  <div class="modal-content modal-sm">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-eye" style="margin-right:8px;font-size:16px;"></i>Alert Details</h2>
+        <p>{{ selectedAlert!.id }}</p>
+      </div>
+      <button class="modal-close" (click)="showAlertDetail=false"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="detail-section">
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-heading"></i> Title</span>
+          <span class="detail-value">{{ selectedAlert!.title }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-align-left"></i> Description</span>
+          <span class="detail-value">{{ selectedAlert!.description }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-tag"></i> Type</span>
+          <span class="detail-value">{{ capitalize(selectedAlert!.type) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-flag"></i> Priority</span>
+          <span class="detail-value"><span class="badge" [class]="priorityClass(selectedAlert!.priority)">{{ selectedAlert!.priority }}</span></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-users"></i> Recipients</span>
+          <span class="detail-value">{{ selectedAlert!.recipients | number }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Regions</span>
+          <span class="detail-value">{{ selectedAlert!.regions.join(', ') }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-broadcast-tower"></i> Channels</span>
+          <span class="detail-value">
+            <div class="alert-channels">
+              <span *ngFor="let ch of selectedAlert!.channels" class="channel-chip"
+                    [class.chip-audio]="ch==='audio'" [class.chip-sms]="ch==='sms'" [class.chip-email]="ch==='email'">
+                {{ ch }}
+              </span>
+            </div>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-chart-bar"></i> Delivery</span>
+          <span class="detail-value">{{ selectedAlert!.deliveryRate }}%</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-circle"></i> Status</span>
+          <span class="detail-value"><span class="badge" [class]="statusClass(selectedAlert!.status)">{{ selectedAlert!.status }}</span></span>
+        </div>
+        <div class="detail-row" *ngIf="selectedAlert!.scriptTemplateId">
+          <span class="detail-label"><i class="fas fa-file-alt"></i> Template</span>
+          <span class="detail-value">{{ templateTitle(selectedAlert!.scriptTemplateId!) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-calendar"></i> Date</span>
+          <span class="detail-value">{{ formatDate(selectedAlert!.date) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-user"></i> Created By</span>
+          <span class="detail-value">{{ selectedAlert!.createdBy }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="showAlertDetail=false">Close</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — BROADCAST DETAIL
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showBroadcastDetail && selectedBroadcast" (click.self)="showBroadcastDetail=false">
+  <div class="modal-content modal-sm">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-eye" style="margin-right:8px;font-size:16px;"></i>Broadcast Details</h2>
+        <p>{{ selectedBroadcast!.title }}</p>
+      </div>
+      <button class="modal-close" (click)="showBroadcastDetail=false"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="detail-section">
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-tag"></i> Type</span>
+          <span class="detail-value">{{ getTypeLabel(selectedBroadcast!.type) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-globe"></i> Languages</span>
+          <span class="detail-value">
+            <span *ngFor="let v of selectedBroadcast!.variants" class="variant-chip variant-has-audio" style="margin-right:4px;">
+              {{ v.language }}
+            </span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-users"></i> Listeners</span>
+          <span class="detail-value">{{ selectedBroadcast!.listeners | number }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-clock"></i> Duration</span>
+          <span class="detail-value">{{ selectedBroadcast!.durationLabel }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-redo"></i> Repeat</span>
+          <span class="detail-value">{{ selectedBroadcast!.repeatSchedule }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-circle"></i> Status</span>
+          <span class="detail-value"><span class="badge" [class]="statusClass(selectedBroadcast!.status)">{{ selectedBroadcast!.status }}</span></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fas fa-calendar"></i> Date</span>
+          <span class="detail-value">{{ formatDate(selectedBroadcast!.date) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedBroadcast!.scriptTemplateId">
+          <span class="detail-label"><i class="fas fa-file-alt"></i> Template</span>
+          <span class="detail-value">{{ templateTitle(selectedBroadcast!.scriptTemplateId!) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="showBroadcastDetail=false">Close</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — CREATE TEMPLATE
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showTemplateModal" (click.self)="closeTemplateModal()">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-file-alt" style="margin-right:8px;font-size:16px;"></i>Create Template</h2>
+        <p>Write an SMS/text template with variables</p>
+      </div>
+      <button class="modal-close" (click)="closeTemplateModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fas fa-heading"></i> Template Name <span class="required">*</span></label>
+          <input class="form-input" type="text" placeholder="e.g. Payment Reminder" [(ngModel)]="templateForm.name" (ngModelChange)="updateTemplatePreview()" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-folder"></i> Category <span class="required">*</span></label>
+          <select class="form-input" [(ngModel)]="templateForm.category">
+            <option value="">Select category</option>
+            <option value="payment">Payment</option>
+            <option value="meeting">Meeting</option>
+            <option value="logistics">Logistics</option>
+            <option value="alert">Alert</option>
+            <option value="need">Need</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-language"></i> Language <span class="required">*</span></label>
+        <select class="form-input" [(ngModel)]="templateForm.language" style="max-width:220px;">
+          <option value="">Select language</option>
+          <option *ngFor="let l of supportedLanguages" [value]="l">{{ l }}</option>
+          <option value="Multiple">Multiple</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-align-left"></i> Message Content</label>
+        <p style="font-size:12px;color:#64748b;margin-bottom:6px;">Use variables like (name), (amount) that will be replaced on send.</p>
+        <div class="template-vars">
+          <button *ngFor="let v of templateVars" class="template-var-btn" (click)="insertVariable(v)">{{ v }}</button>
+        </div>
+        <textarea class="form-input" rows="5" style="margin-top:10px;" placeholder="Dear (name), …"
+                  [(ngModel)]="templateForm.content" (ngModelChange)="updateTemplatePreview()"></textarea>
+      </div>
+      <div class="form-section" *ngIf="templatePreview">
+        <div class="section-title"><i class="fas fa-eye"></i> Preview</div>
+        <div class="template-preview-box">{{ templatePreview }}</div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeTemplateModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveTemplate()">
+        <i class="fas fa-save"></i> Save Template
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL — EDIT TEMPLATE
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showEditTemplateModal" (click.self)="closeEditTemplateModal()">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2><i class="fas fa-pen" style="margin-right:8px;font-size:16px;"></i>Edit Template</h2>
+        <p>Update template content and variables</p>
+      </div>
+      <button class="modal-close" (click)="closeEditTemplateModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fas fa-heading"></i> Template Name <span class="required">*</span></label>
+          <input class="form-input" type="text" [(ngModel)]="editTemplateForm.name" (ngModelChange)="updateEditTemplatePreview()" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-folder"></i> Category <span class="required">*</span></label>
+          <select class="form-input" [(ngModel)]="editTemplateForm.category">
+            <option value="payment">Payment</option>
+            <option value="meeting">Meeting</option>
+            <option value="logistics">Logistics</option>
+            <option value="alert">Alert</option>
+            <option value="need">Need</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-language"></i> Language <span class="required">*</span></label>
+        <select class="form-input" [(ngModel)]="editTemplateForm.language" style="max-width:220px;">
+          <option *ngFor="let l of supportedLanguages" [value]="l">{{ l }}</option>
+          <option value="Multiple">Multiple</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-align-left"></i> Message Content</label>
+        <div class="template-vars">
+          <button *ngFor="let v of templateVars" class="template-var-btn" (click)="insertEditVariable(v)">{{ v }}</button>
+        </div>
+        <textarea class="form-input" rows="5" style="margin-top:10px;"
+                  [(ngModel)]="editTemplateForm.content" (ngModelChange)="updateEditTemplatePreview()"></textarea>
+      </div>
+      <div class="form-section" *ngIf="editTemplatePreview">
+        <div class="section-title"><i class="fas fa-eye"></i> Preview</div>
+        <div class="template-preview-box">{{ editTemplatePreview }}</div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="closeEditTemplateModal()">Cancel</button>
+      <button class="btn btn-primary"
+              [disabled]="isSavingEditTemplate"
+              (click)="updateTemplate()">
+        <i class="fas fa-save"></i> {{ isSavingEditTemplate ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+
+  </div>
+  <!-- Pagination bar — repeat for each tab, swapping pager + filtered ref -->
+  <div class="pagination-bar" *ngIf="filteredLibrary.length > libPager.pageSize">
+    <span class="pager-summary">{{ pageSummary(libPager, filteredLibrary.length) }}</span>
+
+    <div class="pager-controls">
+      <button [disabled]="libPager.page === 1"
+              (click)="libPager.goTo(libPager.page - 1, filteredLibrary.length)">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <ng-container *ngFor="let p of libPager.pages(filteredLibrary.length)">
+        <span *ngIf="p === -1" class="ellipsis">…</span>
+        <button *ngIf="p !== -1"
+                [class.active]="p === libPager.page"
+                (click)="libPager.goTo(p, filteredLibrary.length)">
+          {{ p }}
+        </button>
+      </ng-container>
+
+      <button [disabled]="libPager.page === libPager.totalPages(filteredLibrary.length)"
+              (click)="libPager.goTo(libPager.page + 1, filteredLibrary.length)">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

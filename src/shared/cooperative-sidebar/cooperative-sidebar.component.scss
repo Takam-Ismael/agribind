@@ -1,0 +1,171 @@
+// E:\INGE 4 ISI\Tutorial Project\agribind-platform\source-code\agribind-frontend\src\shared\cooperative-sidebar\cooperative-sidebar.component.scss
+
+.sidebar {
+  width: 256px;
+  height: 100vh;
+  background-color: #fff;
+  border-right: 1px solid #eaeaea;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  font-family: 'Inter', sans-serif;
+  overflow-y: auto;
+  z-index: 1000;
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .logo-icon {
+      background: #328048;
+      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      svg {
+        stroke: #fff;
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+
+      .brand-name {
+        font-weight: 700;
+        color: #1d1f20;
+        font-size: 18px;
+      }
+
+      .brand-subtitle {
+        font-size: 11px;
+        color: #939598;
+      }
+    }
+
+    .close-btn {
+      display: none; // Hidden on desktop
+      margin-left: auto;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+
+      &:hover {
+        color: #328048;
+      }
+    }
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    margin-top: 10px;
+    overflow-y: auto;
+    padding-bottom: 10px;
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px 24px;
+      color: #505050;
+      font-weight: 500;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      margin: 2px 8px;
+
+      .nav-icon {
+        color: #8e8e8e;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+
+      &:hover {
+        background-color: #e8f7e9;
+        color: #265028;
+
+        .nav-icon {
+          color: #328048;
+        }
+      }
+
+      &.active {
+        background-color: #328048;
+        color: white;
+        font-weight: 600;
+
+        .nav-icon {
+          color: white;
+        }
+      }
+    }
+  }
+
+  .sidebar-footer {
+    border-top: 1px solid #eaeaea;
+    padding: 12px 8px;
+    margin-top: auto;
+
+    .logout-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px 16px;
+      color: #dc3545;
+      font-weight: 500;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+
+      .nav-icon {
+        color: #dc3545;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+
+      &:hover {
+        background-color: #fee;
+        color: #b02a37;
+
+        .nav-icon {
+          color: #b02a37;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design for mobile
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -240px;
+    transition: left 0.3s ease;
+
+    &.open {
+      left: 0;
+    }
+
+    .sidebar-header {
+      .close-btn {
+        display: block;
+      }
+    }
+  }
+}

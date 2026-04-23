@@ -1,0 +1,354 @@
+<div class="page-content">
+      <!-- User Info Header - Top of Page -->
+    <div class="user-header-top">
+      <div class="user-info">
+        <div class="user-avatar">
+          <span class="avatar-text">{{ user.initials }}</span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-header-section">
+      <div class="header-content">
+        <div>
+          <h2>Settings</h2>
+          <p class="page-description">Manage your cooperative settings and preferences</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+      <!-- General Settings -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">🏢 General Information</h3>
+        <div class="settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cooperative Name *</label>
+              <input type="text" [(ngModel)]="settings.cooperativeName" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Registration Number</label>
+              <input type="text" [(ngModel)]="settings.registrationNumber" class="form-input" placeholder="RC/XXX/XXXX" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" [(ngModel)]="settings.email" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Phone *</label>
+              <input type="tel" [(ngModel)]="settings.phone" class="form-input" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Address *</label>
+            <textarea [(ngModel)]="settings.address" class="form-textarea" rows="2" required></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Website</label>
+              <input type="url" [(ngModel)]="settings.website" class="form-input" placeholder="https://www.example.com" />
+            </div>
+            <div class="form-group">
+              <label>Tax ID</label>
+              <input type="text" [(ngModel)]="settings.taxId" class="form-input" placeholder="Tax identification number" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Preferences -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">⚙️ System Preferences</h3>
+        <div class="settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Language</label>
+              <select [(ngModel)]="settings.language" class="form-input">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="pt">Português</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <select [(ngModel)]="settings.currency" class="form-input">
+                <option value="XAF">XAF (Central African CFA Franc)</option>
+                <option value="USD">USD (US Dollar)</option>
+                <option value="EUR">EUR (Euro)</option>
+                <option value="GBP">GBP (British Pound)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Timezone</label>
+              <select [(ngModel)]="settings.timezone" class="form-input">
+                <option value="Africa/Douala">West Africa Time (WAT)</option>
+                <option value="Africa/Lagos">West Africa Time (Lagos)</option>
+                <option value="UTC">UTC</option>
+                <option value="Europe/London">London</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date Format</label>
+              <select [(ngModel)]="settings.dateFormat" class="form-input">
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Business Settings -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">💼 Business Settings</h3>
+        <div class="settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Default Tax Rate (%)</label>
+              <input type="number" [(ngModel)]="settings.defaultTaxRate" class="form-input" min="0" max="100" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Default Profit Margin (%)</label>
+              <input type="number" [(ngModel)]="settings.defaultProfitMargin" class="form-input" min="0" max="100" step="0.01" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Payment Terms (days)</label>
+              <input type="number" [(ngModel)]="settings.defaultPaymentTerms" class="form-input" min="0" max="365" />
+            </div>
+            <div class="form-group">
+              <label>Minimum Order Value (XAF)</label>
+              <input type="number" [(ngModel)]="settings.minimumOrderValue" class="form-input" min="0" />
+            </div>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.autoApproveOrders" />
+              Auto-approve orders below minimum value
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Settings -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">🔔 Notification Settings</h3>
+        <div class="settings-form">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.notifications.email" />
+              Email Notifications
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.notifications.sms" />
+              SMS Notifications
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.notifications.push" />
+              Push Notifications
+            </label>
+          </div>
+
+          <div class="notification-subsection">
+            <h4>Alert Types</h4>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.notifications.orderConfirmations" />
+                Order Confirmations
+              </label>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.notifications.paymentReminders" />
+                Payment Reminders
+              </label>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.notifications.lowStockAlerts" />
+                Low Stock Alerts
+              </label>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.notifications.diseaseReports" />
+                Disease Reports
+              </label>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.notifications.contractRenewals" />
+                Contract Renewals
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Settings -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">🔒 Security Settings</h3>
+        <div class="settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Session Timeout (minutes)</label>
+              <input type="number" [(ngModel)]="settings.sessionTimeout" class="form-input" min="5" max="480" />
+            </div>
+            <div class="form-group">
+              <label>Minimum Password Length</label>
+              <input type="number" [(ngModel)]="settings.passwordMinLength" class="form-input" min="6" max="32" />
+            </div>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.twoFactorAuth" />
+              Enable Two-Factor Authentication
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.ipWhitelist" />
+              Enable IP Whitelist
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Integration Settings -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">🔗 Integration Settings</h3>
+        <div class="settings-form">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.apiEnabled" />
+              Enable API Access
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label>Webhook URL</label>
+            <input type="url" [(ngModel)]="settings.webhookUrl" class="form-input" placeholder="https://your-app.com/webhook" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>SMS Provider</label>
+              <select [(ngModel)]="settings.smsProvider" class="form-input">
+                <option value="none">None</option>
+                <option value="twilio">Twilio</option>
+                <option value="africas-talking">Africa's Talking</option>
+                <option value="orange">Orange</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Email Provider</label>
+              <select [(ngModel)]="settings.emailProvider" class="form-input">
+                <option value="smtp">SMTP</option>
+                <option value="sendgrid">SendGrid</option>
+                <option value="mailgun">Mailgun</option>
+                <option value="aws-ses">AWS SES</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup Settings -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">💾 Backup & Data</h3>
+        <div class="settings-form">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.autoBackup" />
+              Enable Automatic Backups
+            </label>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Backup Frequency</label>
+              <select [(ngModel)]="settings.backupFrequency" class="form-input">
+                <option value="hourly">Hourly</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Retention Period (days)</label>
+              <input type="number" [(ngModel)]="settings.backupRetention" class="form-input" min="1" max="365" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Settings -->
+      <div class="settings-card">
+        <h3 class="settings-section-title">🚀 Advanced Settings</h3>
+        <div class="settings-form">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.debugMode" />
+              Debug Mode (Show technical details)
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="settings.maintenanceMode" />
+              Maintenance Mode (Restrict access)
+            </label>
+          </div>
+
+          <div class="feature-flags-section">
+            <h4>Feature Flags</h4>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.featureFlags.advancedAnalytics" />
+                Advanced Analytics Dashboard
+              </label>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.featureFlags.bulkOperations" />
+                Bulk Operations
+              </label>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="settings.featureFlags.customReports" />
+                Custom Reports Builder
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <div class="settings-actions">
+        <button class="btn btn-outline">Cancel</button>
+        <button class="btn btn-primary" (click)="saveSettings()">Save Changes</button>
+      </div>
+</div>
